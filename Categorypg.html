@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Browse All - CampusMarket DUT</title>
+<link rel="stylesheet" href="Category.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+<!-- DATABASE CONNECTION -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+
+<style>
+/* Search Results Modal */
+.search-results-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 9999;
+  padding: 20px;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 100px;
+  overflow-y: auto;
+}
+.search-results-modal.active { display: flex; animation: fadeIn 0.3s; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.search-results-content {
+  background: var(--bg-card);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+  border: 1px solid var(--border);
+  animation: slideUp 0.3s;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.search-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.search-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+}
+.search-modal-close:hover { background: rgba(255,255,255,0.1); }
+
+.search-result-card {
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  gap: 16px;
+}
+.search-result-card:hover {
+  background: rgba(99,102,241,0.1);
+  border-color: var(--accent);
+  transform: translateX(4px);
+}
+
+.search-result-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: rgba(99,102,241,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+.search-result-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.search-result-info {
+  flex: 1;
+}
+.search-result-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+.search-result-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.search-result-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.search-result-price {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.search-result-category {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(6,214,160,0.1);
+  border: 1px solid var(--accent);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: var(--accent);
+  margin-top: 8px;
+}
+
+.search-loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+.search-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+.search-empty i {
+  font-size: 48px;
+  opacity: 0.5;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .search-result-card {
+    flex-direction: column;
+  }
+  .search-result-image {
+    width: 100%;
+    height: 150px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">
+    <a href="index.html">
+      <img src="/Imgs/CM_Logo_1.png" alt="" class="logo-img">
+    </a>
+  </div>
+  <div class="header-actions">
+    <button class="search-btn" title="Search" id="searchBtn">
+      <i data-lucide="search"></i>
+    </button>
+    <button class="sell-btn" onclick="window.location.href='SellerPg.html'">
+      <i data-lucide="plus-circle"></i>
+      Sell
+    </button>
+  </div>
+</header>
+
+<!-- Search Results Modal -->
+<div class="search-results-modal" id="searchResultsModal">
+  <div class="search-results-content">
+    <div class="search-modal-header">
+      <h3>Search Results</h3>
+      <button class="search-modal-close" onclick="closeSearchResults()">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div id="searchResultsContainer"></div>
+  </div>
+</div>
+
+<!-- Page Header -->
+<section class="page-header">
+  <h2>Browse CampusMarket DUT</h2>
+  <p>Find everything you need from fellow DUT students. Safe campus meetups, verified sellers, WhatsApp-only contact.</p>
+</section>
+
+<!-- Search Bar -->
+<section class="search-container">
+  <div class="search-bar">
+    <i data-lucide="search" class="search-icon"></i>
+    <input type="text" class="search-input" id="searchInput" placeholder="Search for items, tutors, or supplies...">
+  </div>
+  
+  <div class="search-hints">
+    <div class="search-hint" data-search="macbook">macbook</div>
+    <div class="search-hint" data-search="engineering tutor">engineering tutor</div>
+    <div class="search-hint" data-search="dut hoodie">dut hoodie</div>
+    <div class="search-hint" data-search="pizza">pizza</div>
+    <div class="search-hint" data-search="python">python tutor</div>
+  </div>
+</section>
+
+<!-- Categories Grid -->
+<main class="categories-container">
+  <div class="categories-grid">
+    
+    <!-- Tech & Gadgets Card -->
+    <div class="category-card-large" data-category="tech">
+      <div class="category-header-large">
+        <div class="category-icon-large">💻</div>
+        <div class="category-title">Tech & Gadgets</div>
+        <div class="category-stats" id="techStats">Loading...</div>
+      </div>
+      
+      <div class="category-details">
+        <p class="category-description">
+          Laptops, phones, tablets, accessories. Meet at campus libraries for safe transactions.
+        </p>
+        
+        <ul class="category-features">
+          <li><i data-lucide="shield-check"></i> Library meetups only for safety</li>
+          <li><i data-lucide="battery-charging"></i> Test items before buying</li>
+          <li><i data-lucide="package"></i> Bring chargers/cables</li>
+        </ul>
+        
+        <button class="browse-btn" onclick="window.location.href='TechPg.html'">
+          <i data-lucide="arrow-right"></i>
+          Browse Tech Items
+        </button>
+      </div>
+    </div>
+    
+    <!-- Merch & Accessories Card -->
+    <div class="category-card-large" data-category="merch">
+      <div class="category-header-large">
+        <div class="category-icon-large">👕</div>
+        <div class="category-title">Merch & Accessories</div>
+        <div class="category-stats" id="merchStats">Loading...</div>
+      </div>
+      
+      <div class="category-details">
+        <p class="category-description">
+          DUT merch, clothing, bags, watches. Public campus spots recommended.
+        </p>
+        
+        <ul class="category-features">
+          <li><i data-lucide="map-pin"></i> Public campus spots preferred</li>
+          <li><i data-lucide="check-circle"></i> Check condition thoroughly</li>
+          <li><i data-lucide="sun"></i> Daylight meetups suggested</li>
+        </ul>
+        
+        <button class="browse-btn" onclick="window.location.href='MerchPg.html'">
+          <i data-lucide="arrow-right"></i>
+          Browse Merch & Clothing
+        </button>
+      </div>
+    </div>
+    
+    <!-- Tutoring Services Card -->
+    <div class="category-card-large" data-category="tutoring">
+      <div class="category-header-large">
+        <div class="category-icon-large">📚</div>
+        <div class="category-title">Tutoring Services</div>
+        <div class="category-stats" id="tutoringStats">Loading...</div>
+      </div>
+      
+      <div class="category-details">
+        <p class="category-description">
+          Academic help, subject tutoring, exam prep. Use empty classrooms for sessions.
+        </p>
+        
+        <ul class="category-features">
+          <li><i data-lucide="graduation-cap"></i> Verified subject experts</li>
+          <li><i data-lucide="users"></i> Group or individual sessions</li>
+          <li><i data-lucide="clock"></i> Flexible scheduling</li>
+        </ul>
+        
+        <button class="browse-btn" onclick="window.location.href='TutoringPg.html'">
+          <i data-lucide="arrow-right"></i>
+          Find Tutors
+        </button>
+      </div>
+    </div>
+    
+    <!-- Food & Supplies Card -->
+    <div class="category-card-large" data-category="food">
+      <div class="category-header-large">
+        <div class="category-icon-large">🍕</div>
+        <div class="category-title">Food & Supplies</div>
+        <div class="category-stats" id="foodStats">Loading...</div>
+      </div>
+      
+      <div class="category-details">
+        <p class="category-description">
+          Homemade food, snacks, drinks, essentials. Residence meetups acceptable.
+        </p>
+        
+        <ul class="category-features">
+          <li><i data-lucide="home"></i> Residence meetups OK</li>
+          <li><i data-lucide="calendar"></i> Check expiry dates</li>
+          <li><i data-lucide="package"></i> Sealed packaging preferred</li>
+        </ul>
+        
+        <button class="browse-btn" onclick="window.location.href='FoodPg.html'">
+          <i data-lucide="arrow-right"></i>
+          Browse Food & Supplies
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <a href="index.html" class="nav-item">
+    <i data-lucide="home"></i>
+    <span>Home</span>
+  </a>
+  
+  <a href="Categorypg.html" class="nav-item active">
+    <i data-lucide="compass"></i>
+    <span>Browse</span>
+  </a>
+  
+  <button class="sell-btn-nav" onclick="window.location.href='SellerPg.html'">
+    <i data-lucide="plus"></i>
+  </button>
+  
+  <a href="SavedPg.html" class="nav-item">
+    <i data-lucide="heart"></i>
+    <span>Saved</span>
+  </a>
+  
+  <a href="Profile.html" class="nav-item">
+    <i data-lucide="user"></i>
+    <span>Profile</span>
+  </a>
+</nav>
+
+<script>
+lucide.createIcons();
+
+// ================= SANITIZATION =================
+function sanitizeHTML(str) {
+  if (!str) return '';
+  const temp = document.createElement('div');
+  temp.textContent = str;
+  return temp.innerHTML;
+}
+
+// ================= CATEGORY DATA =================
+const CATEGORY_MAP = {
+  'tech': { name: 'Tech & Gadgets', emoji: '💻', page: 'TechPg.html' },
+  'merch': { name: 'Merch & Accessories', emoji: '👕', page: 'MerchPg.html' },
+  'tutoring': { name: 'Tutoring Services', emoji: '📚', page: 'TutoringPg.html' },
+  'food': { name: 'Food & Supplies', emoji: '🍕', page: 'FoodPg.html' }
+};
+
+// ================= FETCH CATEGORY STATS =================
+async function fetchCategoryStats() {
+  try {
+    for (const [category, data] of Object.entries(CATEGORY_MAP)) {
+      const { count, error } = await supabaseClient
+        .from('listings')
+        .select('*', { count: 'exact', head: true })
+        .eq('category', category)
+        .eq('status', 'active')
+        .eq('verified', true);
+      
+      if (!error && count !== null) {
+        const element = document.getElementById(`${category}Stats`);
+        if (element) {
+          element.textContent = `${count} active listing${count !== 1 ? 's' : ''}`;
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+  }
+}
+
+// ================= SEARCH FUNCTIONALITY =================
+let searchTimeout;
+let allListings = [];
+
+// Fetch all listings on page load (for instant search)
+async function fetchAllListings() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('listings')
+      .select('*')
+      .eq('status', 'active')
+      .eq('verified', true)
+      .order('created_at', { ascending: false });
+    
+    if (!error && data) {
+      allListings = data;
+      console.log(`✅ Loaded ${allListings.length} listings for search`);
+    }
+  } catch (error) {
+    console.error('Error fetching listings:', error);
+  }
+}
+
+// Live search as user types
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  clearTimeout(searchTimeout);
+  const query = e.target.value.trim();
+  
+  if (query.length < 2) {
+    closeSearchResults();
+    return;
+  }
+  
+  // Debounce search
+  searchTimeout = setTimeout(() => {
+    performSearch(query);
+  }, 300);
+});
+
+// Search on Enter key
+document.getElementById('searchInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    const query = e.target.value.trim();
+    if (query.length >= 2) {
+      performSearch(query);
+    }
+  }
+});
+
+// Search button click
+document.getElementById('searchBtn').addEventListener('click', () => {
+  const query = document.getElementById('searchInput').value.trim();
+  if (query.length >= 2) {
+    performSearch(query);
+  } else {
+    document.getElementById('searchInput').focus();
+  }
+});
+
+// Search hint clicks
+document.querySelectorAll('.search-hint').forEach(hint => {
+  hint.addEventListener('click', () => {
+    const query = hint.dataset.search;
+    document.getElementById('searchInput').value = query;
+    performSearch(query);
+  });
+});
+
+// Perform search
+function performSearch(query) {
+  const lowerQuery = query.toLowerCase();
+  
+  // Filter listings
+  const results = allListings.filter(listing => 
+    listing.title.toLowerCase().includes(lowerQuery) ||
+    listing.description.toLowerCase().includes(lowerQuery) ||
+    listing.category.toLowerCase().includes(lowerQuery) ||
+    listing.seller_name.toLowerCase().includes(lowerQuery) ||
+    listing.location.toLowerCase().includes(lowerQuery) ||
+    listing.campus.toLowerCase().includes(lowerQuery) ||
+    listing.condition.toLowerCase().includes(lowerQuery) ||
+    listing.price.toString().includes(lowerQuery)
+  );
+  
+  displaySearchResults(results, query);
+}
+
+// Display search results
+function displaySearchResults(results, query) {
+  const modal = document.getElementById('searchResultsModal');
+  const container = document.getElementById('searchResultsContainer');
+  
+  modal.classList.add('active');
+  
+  if (results.length === 0) {
+    container.innerHTML = `
+      <div class="search-empty">
+        <i data-lucide="inbox"></i>
+        <h3>No results found for "${sanitizeHTML(query)}"</h3>
+        <p>Try different keywords or browse categories below</p>
+      </div>
+    `;
+    lucide.createIcons();
+    return;
+  }
+  
+  container.innerHTML = results.map(listing => {
+    const categoryInfo = CATEGORY_MAP[listing.category] || { name: listing.category, emoji: '📦' };
+    
+    return `
+      <div class="search-result-card" onclick="goToListing('${listing.id}', '${listing.category}')">
+        <div class="search-result-image">
+          ${listing.images && listing.images.length > 0 
+            ? `<img src="${listing.images[0]}" alt="${sanitizeHTML(listing.title)}" onerror="this.parentElement.innerHTML='${listing.emoji || categoryInfo.emoji}'">` 
+            : (listing.emoji || categoryInfo.emoji)}
+        </div>
+        <div class="search-result-info">
+          <div class="search-result-title">${sanitizeHTML(listing.title)}</div>
+          <div class="search-result-meta">
+            <span><i data-lucide="package" width="14"></i> ${sanitizeHTML(listing.condition)}</span>
+            <span><i data-lucide="map-pin" width="14"></i> ${sanitizeHTML(listing.location || listing.campus)}</span>
+          </div>
+          <div class="search-result-price">R${parseFloat(listing.price).toLocaleString()}</div>
+          <span class="search-result-category">${categoryInfo.emoji} ${categoryInfo.name}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  lucide.createIcons();
+}
+
+// Go to listing (navigate to category page first, then to listing details)
+function goToListing(listingId, category) {
+  // Navigate directly to listing details page
+  window.location.href = `ListingDetails.html?id=${listingId}`;
+}
+
+// Close search results
+function closeSearchResults() {
+  document.getElementById('searchResultsModal').classList.remove('active');
+}
+
+// Category card interactions
+document.querySelectorAll('.category-card-large').forEach(card => {
+  card.addEventListener('click', (e) => {
+    if (!e.target.closest('.browse-btn')) {
+      const category = card.dataset.category;
+      if (CATEGORY_MAP[category]) {
+        window.location.href = CATEGORY_MAP[category].page;
+      }
+    }
+  });
+});
+
+// ================= INITIALIZATION =================
+fetchCategoryStats();
+fetchAllListings();
+
+// Focus search input on page load
+setTimeout(() => {
+  document.getElementById('searchInput').focus();
+}, 300);
+
+// Close modal on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeSearchResults();
+  }
+});
+</script>
+</body>
+
+</html>

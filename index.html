@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CampusMarket DUT - Buy & Sell on Campus</title>
+<link rel="stylesheet" href="homepg.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+<!-- DATABASE CONNECTION -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+
+<meta name="description" content="Buy & sell safely with verified DUT students. Campus meetups only.">
+
+<style>
+  .listing-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px 12px 0 0;
+}
+.listing-emoji-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  background: rgba(99,102,241,0.08);
+  border-radius: 12px 12px 0 0;
+}
+</style>
+</head>
+
+
+<body>
+
+<header>
+  <div class="logo">
+    <a href="index.html">
+    <img src="/Imgs/CM_Logo_1.png" alt="" class="logo-img">
+    </a>
+  <!--   <h1>CampusMarket DUT</h1> -->
+  </div>
+  <div class="verified-badge">
+    <i data-lucide="shield-check"></i>
+    <span>DUT Students Only</span>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-bg">
+    <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80" alt="Students on campus" class="active">
+    <img src="https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1200&q=80">
+    <img src="https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?auto=format&fit=crop&w=1200&q=80" alt="University library">
+     <img src="https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1200&q=80" alt="Students studying">
+  </div>
+
+  <div class="hero-content">
+    <h2>Your Campus Marketplace</h2>
+    <p>Buy & sell with verified DUT students. Safe campus meetups only.</p>
+
+    <div class="hero-actions">
+      <a class="btn-primary" href="Categorypg.html">
+        <i data-lucide="search"></i>
+        Browse Listings
+      </a>
+      <a class="btn-secondary" href="SellerPg.html">
+        <i data-lucide="plus-circle"></i>
+        List an Item
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="trust-badges">
+  <div class="badge emoji">
+    <i data-lucide="shield-check"></i>
+    <span>Verified DUT Students</span>
+  </div>
+  <div class="badge emoji">
+    <i data-lucide="message-circle"></i>
+    <span>WhatsApp Chat</span>
+  </div>
+  <div class="badge emoji">
+    <i data-lucide="map-pin"></i>
+    <span>Campus Meetups</span>
+  </div>
+</div>
+
+<section class="categories-section">
+  <div class="section-title">
+    <i data-lucide="grid"></i>
+    <span>Browse Categories</span>
+  </div>
+  
+  <div class="categories-grid">
+    <a href="TechPg.html" class="category-card">
+      <div class="category-emoji">💻</div>
+      <div class="category-info">
+        <div class="category-name">Tech & Gadgets</div>
+        <div class="category-count" id="techCount">Loading...</div>
+      </div>
+    </a>
+    
+    <a href="MerchPg.html" class="category-card">
+      <div class="category-emoji">👕</div>
+      <div class="category-info">
+        <div class="category-name">Merch & Accessories</div>
+        <div class="category-count" id="merchCount">Loading...</div>
+      </div>
+    </a>
+    
+    <a href="TutoringPg.html" class="category-card">
+      <div class="category-emoji">📚</div>
+      <div class="category-info">
+        <div class="category-name">Tutoring Services</div>
+        <div class="category-count" id="tutoringCount">Loading...</div>
+      </div>
+    </a>
+    
+    <a href="FoodPg.html" class="category-card">
+      <div class="category-emoji">🍕</div>
+      <div class="category-info">
+        <div class="category-name">Food & Supplies</div>
+        <div class="category-count" id="foodCount">Loading...</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section class="featured-section">
+  <div class="section-title">
+    <i data-lucide="flame"></i>
+    <span>Hot Deals Today</span>
+  </div>
+  
+  <div class="listings-grid" id="featuredListingsGrid">
+    <!-- Listings will be dynamically generated -->
+    <div style="grid-column: 1/-1; text-align:center; padding:40px 20px;">
+      <i data-lucide="loader" class="spinning" style="font-size:48px; margin-bottom:16px;"></i>
+      <p>Loading hot deals...</p>
+    </div>
+  </div>
+  
+  <div class="view-all-btn-container">
+    <a href="Categorypg.html" class="view-all-btn">
+      View All Listings
+      <i data-lucide="arrow-right"></i>
+    </a>
+  </div>
+</section>
+
+<section class="how-it-works">
+  <div class="section-title">
+    <i data-lucide="help-circle"></i>
+    <span>How It Works</span>
+  </div>
+  
+  <div class="steps">
+    <div class="step">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h4>Verify as DUT Student</h4>
+        <p>Submit your student ID for verification. Only registered DUT students can trade.</p>
+      </div>
+    </div>
+    
+    <div class="step">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h4>Browse or List Items</h4>
+        <p>Find what you need or list items in under 2 minutes.</p>
+      </div>
+    </div>
+    
+    <div class="step">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h4>Meet on Campus</h4>
+        <p>Chat on WhatsApp, arrange safe campus meetups.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="safety-section">
+  <div class="safety-content">
+    <div class="safety-icon">
+      <i data-lucide="shield-check"></i>
+    </div>
+    <div class="safety-text">
+      <h3>Your Safety is Our Priority</h3>
+      <p>All sellers are verified DUT students. Meet at campus libraries for high-value items. Never send money before seeing the item.</p>
+    </div>
+  </div>
+</section>
+
+<section class="seller-cta">
+  <div class="section-title">
+    <i data-lucide="trending-up"></i>
+    <span>Start Selling Today</span>
+  </div>
+
+  <div class="seller-cta-content">
+    <p>
+      Got unused items? Turn them into cash. List for free and connect with verified DUT students.
+    </p>
+
+    <div class="seller-cta-actions">
+      <a class="btn-primary" href="SellerPg.html">
+        <i data-lucide="plus-circle"></i>
+        Create Listing
+      </a><a class="btn-secondary" href="learn-more.html">
+     <!--  <a class="btn-secondary" href="#" onclick="document.querySelector('.how-it-works').scrollIntoView({behavior:'smooth'}); return false;"> -->
+        <i data-lucide="info"></i>
+        Learn More
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Add this near the bottom of index.html, before footer -->
+<section style="max-width: 900px; margin: 40px auto; padding: 20px; background: rgba(239, 71, 111, 0.05); border-radius: 16px; border: 1px solid rgba(239, 71, 111, 0.2);">
+  <h3 style="color: #ef476f; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+    <i data-lucide="alert-triangle"></i>
+    Important Disclaimer
+  </h3>
+  <p style="color: var(--text-secondary); line-height: 1.6;">
+    CampusMarket DUT is a student-run platform that connects DUT students. 
+    <strong>We do not verify listings, handle payments, or guarantee transactions.</strong> 
+    All interactions are at your own risk. Always meet in safe, public campus locations. 
+    By using this platform, you agree to our 
+    <a href="terms.html" style="color: var(--accent);">Terms of Service</a> and 
+    <a href="privacy.html" style="color: var(--accent);">Privacy Policy</a>.
+  </p>
+</section>
+
+
+<section>
+  <!-- Add before closing tag -->
+<footer style="text-align: center; padding: 40px 20px; border-top: 1px solid var(--border); margin-top: 60px;">
+  <p style="color: var(--text-secondary); margin-bottom: 12px;">
+    © 2026 CampusMarket DUT - Student Marketplace
+  </p>
+  <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+    <a href="terms.html" style="color: var(--accent); text-decoration: none;">Terms of Service</a>
+    <a href="privacy.html" style="color: var(--accent); text-decoration: none;">Privacy Policy</a>
+    <a href="mailto:magwaz08@gmail.com" style="color: var(--accent); text-decoration: none;">Contact</a>
+  </div>
+</footer>
+</section>
+
+<nav class="bottom-nav">
+  <a href="index.html" class="nav-item active">
+    <i data-lucide="home"></i>
+    <span>Home</span>
+  </a>
+  
+  <a href="Categorypg.html" class="nav-item">
+    <i data-lucide="compass"></i>
+    <span>Browse</span>
+  </a>
+  
+  <a href="SellerPg.html" class="sell-btn-nav">
+    <i data-lucide="plus"></i>
+  </a>
+  
+  <a href="SavedPg.html" class="nav-item">
+    <i data-lucide="heart"></i>
+    <span>Saved</span>
+  </a>
+  
+  <a href="Profile.html" class="nav-item">
+    <i data-lucide="user"></i>
+    <span>Profile</span>
+  </a>
+</nav>
+
+<script>
+// ================= SANITIZATION =================
+function sanitizeHTML(str) {
+  if (!str) return '';
+  const temp = document.createElement('div');
+  temp.textContent = str;
+  return temp.innerHTML;
+}
+
+// ================= CATEGORY COUNTS =================
+async function fetchCategoryCounts() {
+  try {
+    const categories = ['tech', 'merch', 'food', 'tutoring'];
+    
+    for (const category of categories) {
+      const { count, error } = await supabaseClient
+        .from('listings')
+        .select('*', { count: 'exact', head: true })
+        .eq('category', category);
+      
+      if (!error && count !== null) {
+        const element = document.getElementById(`${category}Count`);
+        if (element) {
+          element.textContent = `${count} listing${count !== 1 ? 's' : ''}`;
+        }
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error fetching category counts:', error);
+    // Fallback to placeholders
+    document.getElementById('techCount').textContent = 'Browse →';
+    document.getElementById('merchCount').textContent = 'Browse →';
+    document.getElementById('foodCount').textContent = 'Browse →';
+    document.getElementById('tutoringCount').textContent = 'Browse →';
+  }
+}
+
+// ================= FEATURED LISTINGS =================
+
+
+//====== ADDITIONAL CODE FOR THUMBNAIL =======
+function getCardThumbnailHTML(listing) {
+  if (listing.images && listing.images.length > 0) {
+    return `<img
+      src="${listing.images[0]}"
+      alt="${sanitizeHTML(listing.title)}"
+      class="listing-thumb"
+      onerror="this.parentElement.innerHTML='<div class=\\'listing-emoji-wrap\\'>${listing.emoji || '📦'}</div>'"
+    >`;
+  }
+  return `<div class="listing-emoji-wrap">${listing.emoji || '📦'}</div>`;
+}
+
+
+async function fetchFeaturedListings() {
+  const container = document.getElementById('featuredListingsGrid');
+  
+  try {
+    console.log('📡 Fetching featured listings...');
+    
+    // Get most recent listings across all categories
+const { data, error } = await supabaseClient
+  .from('listings')
+  .select('*')
+  .eq('status', 'active')        // ← ADD THIS
+  .eq('verified', true)          // ← ADD THIS
+  .order('created_at', { ascending: false })
+  .limit(8);
+    if (error) throw error;
+    
+    console.log('✅ Fetched featured listings:', data);
+    
+    if (!data || data.length === 0) {
+      container.innerHTML = `
+        <div style="grid-column: 1/-1; text-align:center; padding:40px 20px;">
+          <i data-lucide="inbox" style="font-size:48px; margin-bottom:16px; opacity:0.5;"></i>
+          <h3>No listings yet</h3>
+          <p style="color:var(--text-secondary); margin-top:8px;">
+            Be the first to list an item!
+          </p>
+          <a href="SellerPg.html" style="display:inline-block; margin-top:20px; padding:12px 24px; background:var(--primary-gradient); border-radius:8px; color:white; text-decoration:none;">
+            <i data-lucide="plus-circle"></i> List Now
+          </a>
+        </div>
+      `;
+      lucide.createIcons();
+      return;
+    }
+    
+    renderFeaturedListings(data);
+    
+  } catch (error) {
+    console.error('❌ Error fetching featured listings:', error);
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align:center; padding:40px;">
+        <i data-lucide="wifi-off" style="font-size:48px; margin-bottom:16px;"></i>
+        <h3>Unable to load listings</h3>
+        <p style="color:var(--text-secondary);">Please check your connection.</p>
+      </div>
+    `;
+    lucide.createIcons();
+  }
+}
+
+// ================= RENDER FEATURED LISTINGS =================
+function renderFeaturedListings(listings) {
+  const container = document.getElementById('featuredListingsGrid');
+  container.innerHTML = '';
+  
+  listings.forEach(listing => {
+    const card = document.createElement('div');
+    card.className = 'listing-card';
+    card.dataset.id = listing.id;
+    
+    // Map category to emoji
+    const emojiMap = {
+      'tech': '💻',
+      'merch': '👕',
+      'food': '🍕',
+      'tutoring': '📚'
+    };
+    
+    const emoji = listing.emoji || emojiMap[listing.category] || '📦';
+    
+    card.innerHTML = `
+  <div class="listing-image">
+    ${getCardThumbnailHTML(listing)}
+  </div>
+      <div class="listing-details">
+        <div class="listing-title">${sanitizeHTML(listing.title)}</div>
+        <div class="listing-price">R${parseFloat(listing.price).toLocaleString()}</div>
+        <div class="listing-meta">
+          <span><i data-lucide="map-pin" width="14"></i> ${sanitizeHTML(listing.location || listing.campus)}</span>
+        </div>
+
+         <button class="whatsapp-btn" 
+            data-phone="${listing.seller_phone || ''}"
+            data-title="${sanitizeHTML(listing.title)}">
+            <i data-lucide="message-circle" width="14"></i>
+            Chat
+          </button>
+      </div>
+    `;
+    
+    // Card click
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('.whatsapp-btn')) {
+        window.location.href = `ListingDetails.html?id=${listing.id}`;
+      }
+    });
+    
+    container.appendChild(card);
+  });
+  
+  lucide.createIcons();
+  
+  // Add WhatsApp handlers
+  document.querySelectorAll('.whatsapp-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const phone = btn.dataset.phone;
+      const title = btn.dataset.title;
+      const message = `Hi! I'm interested in your "${title}" on CampusMarket DUT. Is it still available?`;
+      
+      if (phone) {
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+      }
+    });
+  });
+}
+
+// ================= INITIALIZATION =================
+lucide.createIcons();
+
+// Hero slideshow
+const slides = document.querySelectorAll(".hero-bg img");
+let current = 0;
+
+setInterval(() => {
+  slides[current].classList.remove("active");
+  current = (current + 1) % slides.length;
+  slides[current].classList.add("active");
+}, 5000);
+
+// Load real data
+fetchCategoryCounts();
+fetchFeaturedListings();
+
+// Add animation styles
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .spinning {
+    animation: spin 1s linear infinite;
+  }
+`;
+document.head.appendChild(style);
+</script>
+
+</body>
+</html>

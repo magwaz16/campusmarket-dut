@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - CampusMarket DUT</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+:root {
+  --primary: #6366f1;
+  --accent: #06d6a0;
+  --bg-dark: #0f172a;
+  --bg-card: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border: #334155;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+.admin-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  background: var(--bg-card);
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 30px;
+  border: 1px solid var(--border);
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.stat-pending { color: var(--warning); }
+.stat-active { color: var(--success); }
+.stat-sold { color: var(--text-secondary); }
+
+.filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.filter-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.listings-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.listing-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  gap: 20px;
+  align-items: start;
+}
+
+.listing-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: rgba(99,102,241,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+}
+
+.listing-info h3 {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+.listing-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.listing-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.listing-description {
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.listing-actions {
+  display: flex;
+  gap: 8px;
+  flex-direction: column;
+}
+
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-approve {
+  background: var(--success);
+  color: white;
+}
+
+.btn-approve:hover {
+  background: #16a34a;
+}
+
+.btn-reject {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-reject:hover {
+  background: #dc2626;
+}
+
+.btn-view {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.btn-view:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-pending {
+  background: rgba(245,158,11,0.2);
+  color: var(--warning);
+}
+
+.badge-active {
+  background: rgba(34,197,94,0.2);
+  color: var(--success);
+}
+
+.badge-verified {
+  background: rgba(6,214,160,0.2);
+  color: var(--accent);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-state i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+@media (max-width: 768px) {
+  .listing-card {
+    grid-template-columns: 1fr;
+  }
+  
+  .listing-actions {
+    flex-direction: row;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="admin-container">
+  <header>
+    <h1><i data-lucide="shield-check"></i> Admin Panel</h1>
+    <p style="color: var(--text-secondary);">Manage and verify CampusMarket listings</p>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value stat-pending" id="statPending">0</div>
+      <div class="stat-label">Pending Review</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value stat-active" id="statActive">0</div>
+      <div class="stat-label">Active Listings</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value stat-sold" id="statSold">0</div>
+      <div class="stat-label">Sold Items</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statTotal">0</div>
+      <div class="stat-label">Total Listings</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all" onclick="filterListings('all')">
+      All Listings
+    </button>
+    <button class="filter-btn" data-filter="pending" onclick="filterListings('pending')">
+      Pending Review
+    </button>
+    <button class="filter-btn" data-filter="active" onclick="filterListings('active')">
+      Active
+    </button>
+    <button class="filter-btn" data-filter="sold" onclick="filterListings('sold')">
+      Sold
+    </button>
+  </div>
+
+  <!-- Listings -->
+  <div class="listings-grid" id="listingsGrid">
+    <div class="empty-state">
+      <i data-lucide="loader"></i>
+      <p>Loading listings...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+lucide.createIcons();
+
+let ALL_LISTINGS = [];
+let currentFilter = 'all';
+
+// Password protection
+const ADMIN_PASSWORD = '22490622CM_adminsOnly!'; // CHANGE THIS!
+
+function checkAuth() {
+  const saved = sessionStorage.getItem('admin_auth');
+  if (saved === ADMIN_PASSWORD) return true;
+  
+  const password = prompt('Enter admin password:');
+  if (password === ADMIN_PASSWORD) {
+    sessionStorage.setItem('admin_auth', password);
+    return true;
+  }
+  
+  alert('❌ Access denied');
+  window.location.href = 'index.html';
+  return false;
+}
+
+// Fetch all listings
+async function fetchListings() {
+  try {
+    // IMPORTANT: Temporarily disable RLS to fetch ALL listings
+    const { data, error } = await supabaseAdmin
+      .from('listings')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    ALL_LISTINGS = data || [];
+    updateStats();
+    renderListings();
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    document.getElementById('listingsGrid').innerHTML = `
+      <div class="empty-state">
+        <i data-lucide="alert-circle"></i>
+        <p>Error loading listings. Check console.</p>
+      </div>
+    `;
+    lucide.createIcons();
+  }
+}
+
+// Update stats
+function updateStats() {
+  const pending = ALL_LISTINGS.filter(l => l.status === 'pending').length;
+  const active = ALL_LISTINGS.filter(l => l.status === 'active').length;
+  const sold = ALL_LISTINGS.filter(l => l.status === 'sold').length;
+  
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statActive').textContent = active;
+  document.getElementById('statSold').textContent = sold;
+  document.getElementById('statTotal').textContent = ALL_LISTINGS.length;
+}
+
+// Filter listings
+function filterListings(filter) {
+  currentFilter = filter;
+  
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+  
+  renderListings();
+}
+
+// Render listings
+function renderListings() {
+  const grid = document.getElementById('listingsGrid');
+  
+  let filtered = ALL_LISTINGS;
+  if (currentFilter !== 'all') {
+    filtered = ALL_LISTINGS.filter(l => l.status === currentFilter);
+  }
+  
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <i data-lucide="inbox"></i>
+        <p>No ${currentFilter === 'all' ? '' : currentFilter} listings found</p>
+      </div>
+    `;
+    lucide.createIcons();
+    return;
+  }
+  
+  grid.innerHTML = '';
+  
+  filtered.forEach(listing => {
+    const card = createListingCard(listing);
+    grid.appendChild(card);
+  });
+  
+  lucide.createIcons();
+}
+
+// Create listing card
+function createListingCard(listing) {
+  const card = document.createElement('div');
+  card.className = 'listing-card';
+  
+  const date = new Date(listing.created_at).toLocaleString();
+  const imageHTML = listing.images && listing.images.length > 0
+    ? `<img src="${listing.images[0]}" class="listing-image">`
+    : `<div class="listing-image">${listing.emoji || '📦'}</div>`;
+  
+  card.innerHTML = `
+    ${imageHTML}
+    
+    <div class="listing-info">
+      <h3>${listing.title}</h3>
+      <div class="listing-meta">
+        <span><i data-lucide="user" width="14"></i> ${listing.seller_name}</span>
+        <span><i data-lucide="phone" width="14"></i> ${listing.seller_phone}</span>
+        <span><i data-lucide="dollar-sign" width="14"></i> R${parseFloat(listing.price).toLocaleString()}</span>
+        <span><i data-lucide="map-pin" width="14"></i> ${listing.campus} - ${listing.location}</span>
+        <span><i data-lucide="clock" width="14"></i> ${date}</span>
+      </div>
+      <p class="listing-description">${listing.description}</p>
+      <div>
+        <span class="badge badge-${listing.status}">${listing.status.toUpperCase()}</span>
+        ${listing.verified ? '<span class="badge badge-verified">VERIFIED</span>' : ''}
+      </div>
+    </div>
+    
+    <div class="listing-actions">
+      ${listing.status === 'pending' ? `
+        <button class="btn btn-approve" onclick="approveListing(${listing.id})">
+          <i data-lucide="check" width="16"></i>
+          Approve
+        </button>
+      ` : ''}
+      ${listing.status === 'active' ? `
+        <button class="btn btn-reject" onclick="markAsSold(${listing.id})">
+          <i data-lucide="check-circle" width="16"></i>
+          Mark Sold
+        </button>
+      ` : ''}
+      <button class="btn btn-reject" onclick="rejectListing(${listing.id})">
+        <i data-lucide="x" width="16"></i>
+        Delete
+      </button>
+      <button class="btn btn-view" onclick="window.open('ListingDetails.html?id=${listing.id}', '_blank')">
+        <i data-lucide="eye" width="16"></i>
+        View
+      </button>
+    </div>
+  `;
+  
+  return card;
+}
+
+// Approve listing
+async function approveListing(id) {
+  if (!confirm('Approve this listing? It will become visible to all students.')) return;
+  
+  try {
+    const { error } = await supabaseAdmin
+      .from('listings')
+      .update({ 
+        status: 'active',
+        verified: true
+      })
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    alert('✅ Listing approved!');
+    fetchListings();
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('Error approving listing');
+  }
+}
+
+// Mark as sold
+async function markAsSold(id) {
+  if (!confirm('Mark this listing as sold?')) return;
+  
+  try {
+    const { error } = await supabaseAdmin
+      .from('listings')
+      .update({ status: 'sold' })
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    alert('✅ Marked as sold!');
+    fetchListings();
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('Error updating listing');
+  }
+}
+
+// Reject/delete listing
+async function rejectListing(id) {
+  if (!confirm('⚠️ DELETE this listing permanently? This cannot be undone.')) return;
+  
+  try {
+    const { error } = await supabaseAdmin
+      .from('listings')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    alert('✅ Listing deleted');
+    fetchListings();
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('Error deleting listing');
+  }
+}
+
+// Init
+if (checkAuth()) {
+  fetchListings();
+  setInterval(fetchListings, 30000); // Refresh every 30 seconds
+}
+</script>
+</body>
+</html>

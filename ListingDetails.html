@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Listing Details - CampusMarket DUT</title>
+
+<link rel="stylesheet" href="ListingDetails.css">
+<link rel="stylesheet" href="Category.css">
+
+<!-- DATABASE CONNECTION -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header>
+   <div class="logo">
+   <a href="index.html">
+     <img src="/Imgs/CM_Logo_1.png" alt="" class="logo-img">
+    </a>
+     
+  <!--   <h1>CampusMarket DUT</h1> -->
+  </div>
+
+  <button class="back-btn" onclick="window.history.back()">
+    <i data-lucide="arrow-left"></i>
+    Back
+  </button>
+</header>
+
+<!-- LISTING DETAILS -->
+<main class="listing-container">
+
+  <!-- Image / Emoji -->
+  <section class="listing-media">
+    <div class="listing-emoji" id="listingEmoji">💻</div>
+  </section>
+
+  <!-- Info -->
+  <section class="listing-info">
+
+    <div class="listing-header">
+      <h2 id="listingTitle">Loading...</h2>
+      <span class="listing-price" id="listingPrice"></span>
+    </div>
+
+    <div class="listing-meta">
+      <span><i data-lucide="map-pin"></i> <span id="listingCampus"></span></span>
+      <span><i data-lucide="clock"></i> <span id="listingTime"></span></span>
+      <span class="condition-badge" id="listingCondition"></span>
+    </div>
+
+    <p class="listing-description" id="listingDescription"></p>
+
+    <!-- ACTIONS -->
+    <div class="listing-actions">
+      <button class="chat-btn" id="chatBtn">
+        <i data-lucide="message-circle"></i>
+        Chat Seller on WhatsApp
+      </button>
+
+      <button class="save-btn" id="saveBtn">
+        <i data-lucide="heart"></i>
+      </button>
+    </div>
+
+    <!-- SAFETY -->
+    <div class="safety-box">
+      <i data-lucide="shield-check"></i>
+      Meet on campus. Verify item before paying.
+    </div>
+
+  </section>
+
+</main>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <a href="index.html" class="nav-item">
+    <i data-lucide="home"></i>
+    <span>Home</span>
+  </a>
+
+  <a href="Categorypg.html" class="nav-item">
+    <i data-lucide="compass"></i>
+    <span>Browse</span>
+  </a>
+
+  <button class="sell-btn-nav" onclick="window.location.href='SellerPg.html'">
+    <i data-lucide="plus"></i>
+  </button>
+
+  <a href="SavedPg.html" class="nav-item">
+    <i data-lucide="heart"></i>
+    <span>Saved</span>
+  </a>
+
+  <a href="Profile.html" class="nav-item">
+    <i data-lucide="user"></i>
+    <span>Profile</span>
+  </a>
+</nav>
+
+<script>
+lucide.createIcons();
+
+// ================= SANITIZATION =================
+function sanitizeHTML(str) {
+  if (!str) return '';
+  const temp = document.createElement('div');
+  temp.textContent = str;
+  return temp.innerHTML;
+}
+
+// ================= STORAGE MODULE =================
+const STORAGE_KEY = 'campusmarket_saved_items';
+
+function getSavedItems() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch (error) {
+    console.error('Error reading saved items:', error);
+    return [];
+  }
+}
+
+function saveItem(item) {
+  const items = getSavedItems();
+  const exists = items.some(i => i.id === item.id);
+  
+  if (!exists) {
+    items.unshift(item);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    return true;
+  }
+  return false;
+}
+
+function removeSavedItem(itemId) {
+  const items = getSavedItems();
+  const filtered = items.filter(i => i.id !== itemId);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+  return true;
+}
+
+function isItemSaved(itemId) {
+  return getSavedItems().some(i => i.id === itemId);
+}
+
+// ================= NOTIFICATION =================
+function showSaveNotification(message) {
+  const notification = document.createElement('div');
+  notification.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><i data-lucide="heart"></i><span>' + message + '</span></div>';
+  Object.assign(notification.style, {
+    position:'fixed', top:'100px', right:'20px',
+    background:'var(--bg-card)', color:'var(--text-primary)',
+    padding:'12px 20px', borderRadius:'12px',
+    border:'1px solid var(--border)', zIndex:'1000',
+    animation:'slideIn 0.3s ease'
+  });
+  document.body.appendChild(notification);
+  lucide.createIcons();
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => notification.remove(), 300);
+  }, 2000);
+}
+
+// ================= GALLERY FUNCTIONS =================
+function getGalleryHTML(listing) {
+  if (!listing.images || listing.images.length === 0) {
+    return `<div class="listing-emoji-hero">${listing.emoji || '📦'}</div>`;
+  }
+  
+  const thumbs = listing.images.length > 1
+    ? `<div class="listing-gallery-thumbs">
+        ${listing.images.map((url, i) => `
+          <img src="${url}"
+               class="listing-gallery-thumb ${i === 0 ? 'active' : ''}"
+               alt="Photo ${i+1}"
+               onclick="switchMainImage(this, '${url}')">`).join('')}
+      </div>` 
+    : '';
+  
+  return `
+    <div class="listing-gallery">
+      <img src="${listing.images[0]}" 
+           class="listing-gallery-main" 
+           id="galleryMain" 
+           alt="${sanitizeHTML(listing.title)}">
+      ${thumbs}
+    </div>`;
+}
+
+function switchMainImage(thumbEl, url) {
+  document.getElementById('galleryMain').src = url;
+  document.querySelectorAll('.listing-gallery-thumb').forEach(t => t.classList.remove('active'));
+  thumbEl.classList.add('active');
+}
+
+// ================= FETCH & DISPLAY =================
+const params = new URLSearchParams(window.location.search);
+const listingId = Number(params.get('id'));
+
+async function fetchListing() {
+  if (!listingId) {
+    document.querySelector('.listing-container').innerHTML = '<p style="padding:40px;text-align:center;">No listing ID provided.</p>';
+    return;
+  }
+
+  try {
+    console.log('📡 Fetching listing:', listingId);
+    
+    const { data, error } = await supabaseClient
+      .from('listings')
+      .select('*')
+      .eq('id', listingId)
+      .single();
+    
+    if (error) throw error;
+    if (!data) {
+      document.querySelector('.listing-container').innerHTML = '<p style="padding:40px;text-align:center;">Listing not found.</p>';
+      return;
+    }
+    
+    console.log('✅ Fetched listing:', data);
+    displayListing(data);
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    document.querySelector('.listing-container').innerHTML = '<p style="padding:40px;text-align:center;">Error loading listing.</p>';
+  }
+}
+
+function displayListing(listing) {
+  // Replace the entire media section with gallery
+  const mediaSection = document.querySelector('.listing-media');
+  mediaSection.innerHTML = getGalleryHTML(listing);
+  
+  // Display listing info
+  document.getElementById('listingTitle').textContent = listing.title;
+  document.getElementById('listingPrice').textContent = 'R' + parseFloat(listing.price).toLocaleString();
+  document.getElementById('listingCampus').textContent = listing.location || listing.campus;
+  
+  // Format date
+  const postedDate = new Date(listing.created_at);
+  const now = new Date();
+  const diffDays = Math.floor((now - postedDate) / (1000 * 60 * 60 * 24));
+  let timeText = 'Posted recently';
+  if (diffDays === 0) timeText = 'Posted today';
+  else if (diffDays === 1) timeText = 'Posted yesterday';
+  else if (diffDays < 7) timeText = 'Posted ' + diffDays + ' days ago';
+  
+  document.getElementById('listingTime').textContent = timeText;
+  document.getElementById('listingCondition').textContent = listing.condition;
+  document.getElementById('listingDescription').textContent = listing.description || 'No description provided.';
+
+  // Save button
+  const saveBtn = document.getElementById('saveBtn');
+  
+  if (isItemSaved(listing.id)) {
+    saveBtn.classList.add('saved');
+    saveBtn.innerHTML = '<i data-lucide="heart" fill="#ef476f" color="#ef476f"></i>';
+  }
+  
+  saveBtn.addEventListener('click', () => {
+    const currentlySaved = isItemSaved(listing.id);
+    
+    if (currentlySaved) {
+      removeSavedItem(listing.id);
+      saveBtn.classList.remove('saved');
+      saveBtn.innerHTML = '<i data-lucide="heart"></i>';
+      showSaveNotification('Removed from saved');
+    } else {
+      const itemToSave = {
+        id: listing.id,
+        title: listing.title,
+        price: listing.price,
+        category: listing.category,
+        emoji: listing.emoji,
+        campus: listing.campus,
+        location: listing.location,
+        sellerName: listing.seller_name,
+        postedDate: listing.created_at,
+        description: listing.description || '',
+        condition: listing.condition,
+        status: listing.status
+      };
+      
+      saveItem(itemToSave);
+      saveBtn.classList.add('saved');
+      saveBtn.innerHTML = '<i data-lucide="heart" fill="#ef476f" color="#ef476f"></i>';
+      showSaveNotification('Saved! View in Saved page');
+    }
+    
+    lucide.createIcons();
+  });
+
+  // WhatsApp button
+  document.getElementById('chatBtn').addEventListener('click', () => {
+    const msg = 'Hi! I am interested in your "' + listing.title + '" listed on CampusMarket DUT. Is it still available?';
+    const phone = listing.seller_phone || '';
+    window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+  });
+  
+  lucide.createIcons();
+  
+  // Update view count
+  supabaseClient
+    .from('listings')
+    .update({ views: (listing.views || 0) + 1 })
+    .eq('id', listingId)
+    .then(() => console.log('👁️ View counted'));
+}
+
+// ================= ADD ANIMATION STYLES =================
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideIn { 
+    from { transform: translateX(100%); opacity: 0; } 
+    to { transform: translateX(0); opacity: 1; } 
+  }
+  @keyframes slideOut { 
+    from { transform: translateX(0); opacity: 1; } 
+    to { transform: translateX(100%); opacity: 0; } 
+  }
+  
+  /* Image gallery styles */
+  .listing-gallery {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .listing-gallery-main {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    border-radius: 16px;
+    display: block;
+  }
+  .listing-gallery-thumbs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .listing-gallery-thumb {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    flex-shrink: 0;
+    transition: border-color 0.2s;
+  }
+  .listing-gallery-thumb.active,
+  .listing-gallery-thumb:hover {
+    border-color: var(--accent);
+  }
+  .listing-emoji-hero {
+    font-size: 5rem;
+    text-align: center;
+    padding: 30px;
+    background: rgba(99,102,241,0.08);
+    border-radius: 16px;
+  }
+`;
+document.head.appendChild(style);
+
+// ================= INITIALIZE =================
+fetchListing();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,253 @@
+@import url('Category.css');
+
+/* ================= LAYOUT ================= */
+
+.listing-container {
+  max-width: 1000px;
+  margin: 30px auto 100px;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 30px;
+}
+
+.listing-media {
+  background: var(--bg-card);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 320px;
+}
+
+.listing-emoji {
+  font-size: 6rem;
+}
+
+.listing-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.listing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.listing-header h2 {
+  font-size: 2rem;
+  flex: 1;
+}
+
+.listing-price {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.listing-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.listing-meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.condition-badge {
+  background: rgba(6, 214, 160, 0.15);
+  color: var(--accent);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+.listing-description {
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.listing-gallery { 
+  display:grid; 
+  gap:8px; 
+  margin-bottom:20px; 
+}
+
+.listing-gallery-main { 
+  width:100%; 
+  aspect-ratio:4/3; 
+  object-fit:cover; 
+  border-radius:16px; 
+  display:block; 
+}
+
+.listing-gallery-thumbs {
+   display:flex; 
+   gap:8px; 
+   overflow-x:auto; 
+   padding-bottom:4px; 
+  }
+
+.listing-gallery-thumb {
+   width:72px; 
+   height:72px;
+   object-fit:cover; 
+   border-radius:10px; 
+  cursor:pointer; 
+   border:2px solid transparent;
+    flex-shrink:0; 
+   transition:border-color 0.2s; }
+
+.listing-gallery-thumb.active, 
+.listing-gallery-thumb:hover {
+     border-color: var(--accent); 
+    }
+    
+.listing-emoji-hero { 
+  font-size:5rem; 
+  text-align:center; 
+  padding:30px; 
+  background:rgba(99,102,241,0.08); 
+  border-radius:16px; 
+  margin-bottom:20px; }
+
+/* ================= ACTIONS ================= */
+.listing-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.chat-btn {
+  flex: 1;
+  background: var(--primary-gradient);
+  border: none;
+  padding: 14px 24px;
+  border-radius: 12px;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.chat-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(6, 214, 160, 0.3);
+}
+
+.chat-btn:active {
+  transform: translateY(0);
+}
+
+.save-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 14px 20px;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  min-width: 60px;
+}
+
+.save-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.save-btn:active {
+  transform: scale(0.95);
+}
+
+.save-btn.saved {
+  background: rgba(239, 71, 111, 0.1);
+  border-color: #ef476f;
+}
+
+.save-btn.saved:hover {
+  background: rgba(239, 71, 111, 0.2);
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.safety-box {
+  margin-top: 20px;
+  padding: 14px;
+  background: rgba(99,102,241,0.1);
+  border-radius: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.safety-box i {
+  color: var(--accent);
+}
+
+/* ================= MOBILE ================= */
+@media (max-width: 768px) {
+  .listing-container {
+    grid-template-columns: 1fr;
+    margin-top: 20px;
+  }
+
+  .listing-media {
+    height: 240px;
+  }
+
+  .listing-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .listing-header h2 {
+    font-size: 1.6rem;
+  }
+
+  .listing-price {
+    font-size: 1.4rem;
+  }
+
+  .listing-actions {
+    flex-direction: column;
+  }
+
+  .save-btn {
+    width: 100%;
+  }
+}

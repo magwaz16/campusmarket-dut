@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learn More - CampusMarket DUT</title>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+  --primary: #6366f1;
+  --accent: #06d6a0;
+  --bg-dark: #0f172a;
+  --bg-card: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border: #334155;
+  --warning: #f59e0b;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+header {
+  background: var(--bg-card);
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: block;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  gap: 8px;
+  width: 120px;
+}
+
+.logo-img{
+  width: 100%
+}
+.logo h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 20px 100px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  text-decoration: none;
+  margin-bottom: 30px;
+  transition: all 0.2s;
+}
+
+.back-link:hover {
+  gap: 12px;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.page-header h2 {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.page-header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.section {
+  margin-bottom: 50px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--border);
+}
+
+.section-header h3 {
+  font-size: 1.8rem;
+  color: var(--accent);
+}
+
+.steps-grid {
+  display: grid;
+  gap: 24px;
+}
+
+.step-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+
+.step-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--accent);
+  color: var(--bg-dark);
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 16px;
+}
+
+.step-card h4 {
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.step-card p {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.faq-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.faq-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.faq-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.faq-question:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.faq-question h4 {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.faq-answer {
+  padding: 0 20px;
+  max-height: 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  color: var(--text-secondary);
+}
+
+.faq-answer.active {
+  padding: 0 20px 20px;
+  max-height: 500px;
+}
+
+.faq-icon {
+  transition: transform 0.3s;
+}
+
+.faq-item.active .faq-icon {
+  transform: rotate(180deg);
+}
+
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.tip-card {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.tip-card h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--accent);
+}
+
+.tip-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.tip-card li {
+  padding-left: 24px;
+  position: relative;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+.tip-card li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: bold;
+}
+
+.cta-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  margin-top: 60px;
+}
+
+.cta-section h3 {
+  font-size: 2rem;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 2px solid var(--border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.warning-box {
+  background: rgba(245, 158, 11, 0.1);
+  border-left: 4px solid var(--warning);
+  padding: 20px;
+  border-radius: 8px;
+  margin: 24px 0;
+}
+
+.warning-box h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--warning);
+  margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+  .page-header h2 {
+    font-size: 2rem;
+  }
+  
+  .container {
+    padding: 20px 16px 80px;
+  }
+  
+  .cta-buttons {
+    flex-direction: column;
+  }
+  
+  .tips-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+
+<header>
+  
+  <div class="logo">
+    <a href="index.html">
+      <img src="/Imgs/CM_Logo_1.png" alt="CampusMarket DUT" class="logo-img">
+      <!-- <h1>CampusMarket DUT</h1> -->
+    </a>
+  </div>
+</header>
+
+<div class="container">
+  <a href="index.html" class="back-link">
+    <i data-lucide="arrow-left"></i>
+    Back to Home
+  </a>
+
+  <div class="page-header">
+    <h2>How CampusMarket Works</h2>
+    <p>Everything you need to know about buying and selling on campus</p>
+  </div>
+
+  <!-- HOW TO BUY -->
+  <section class="section">
+    <div class="section-header">
+      <i data-lucide="shopping-bag" width="32"></i>
+      <h3>How to Buy</h3>
+    </div>
+    
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Browse Listings</h4>
+        <p>Explore items by category (Tech, Merch, Food, Tutoring). Use filters to find exactly what you need on your campus.</p>
+      </div>
+      
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Check Details</h4>
+        <p>Click on any listing to see photos, description, price, condition, and seller's campus location.</p>
+      </div>
+      
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>Contact Seller</h4>
+        <p>Tap "Chat on WhatsApp" to message the seller directly. Ask questions, negotiate price if allowed, and arrange a meetup.</p>
+      </div>
+      
+      <div class="step-card">
+        <div class="step-number">4</div>
+        <h4>Meet & Inspect</h4>
+        <p>Meet at a safe campus location (library, cafeteria). Inspect the item thoroughly before paying. Cash transactions only.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW TO SELL -->
+  <section class="section">
+    <div class="section-header">
+      <i data-lucide="tag" width="32"></i>
+      <h3>How to Sell</h3>
+    </div>
+    
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Create Listing</h4>
+        <p>Click "Sell" and choose your category. Add clear photos (up to 4), write an honest description, and set your price.</p>
+      </div>
+      
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Get Verified</h4>
+        <p>After submitting, you'll receive a WhatsApp message within 24 hours asking for your DUT student ID photo for verification.</p>
+      </div>
+      
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>Listing Goes Live</h4>
+        <p>Once verified, your listing appears on the site. Buyers can now see it and contact you via WhatsApp.</p>
+      </div>
+      
+      <div class="step-card">
+        <div class="step-number">4</div>
+        <h4>Complete Sale</h4>
+        <p>Meet buyer at your chosen campus location. After selling, mark the item as "Sold" in your Profile to remove it from active listings.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SAFETY TIPS -->
+  <section class="section">
+    <div class="section-header">
+      <i data-lucide="shield-check" width="32"></i>
+      <h3>Safety Guidelines</h3>
+    </div>
+    
+    <div class="tips-grid">
+      <div class="tip-card">
+        <h4><i data-lucide="map-pin"></i> Safe Meetup Locations</h4>
+        <ul>
+          <li>Campus libraries (best for tech items)</li>
+          <li>Main cafeterias & food courts</li>
+          <li>Central courtyards during daytime</li>
+          <li>Never meet in parking lots or isolated areas</li>
+        </ul>
+      </div>
+      
+      <div class="tip-card">
+        <h4><i data-lucide="eye"></i> Inspect Before Paying</h4>
+        <ul>
+          <li>Test tech items thoroughly (battery, screen, etc.)</li>
+          <li>Check clothing for damage or stains</li>
+          <li>Verify textbook editions and condition</li>
+          <li>Never pay without seeing the item first</li>
+        </ul>
+      </div>
+      
+      <div class="tip-card">
+        <h4><i data-lucide="users"></i> Bring a Friend</h4>
+        <ul>
+          <li>For high-value items (R1000+)</li>
+          <li>If meeting someone for the first time</li>
+          <li>When meeting in the evening</li>
+          <li>Always tell someone where you're going</li>
+        </ul>
+      </div>
+      
+      <div class="tip-card">
+        <h4><i data-lucide="alert-triangle"></i> Red Flags</h4>
+        <ul>
+          <li>Seller refuses to meet on campus</li>
+          <li>Asks for payment before meetup</li>
+          <li>Price seems too good to be true</li>
+          <li>Won't show DUT student ID when asked</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- WARNING BOX -->
+  <div class="warning-box">
+    <h4><i data-lucide="shield-alert"></i> Important Reminder</h4>
+    <p>
+      CampusMarket DUT is a platform that connects students. We do NOT handle payments, 
+      verify item conditions, or guarantee transactions. All trades are between students at their own risk. 
+      Always use common sense and prioritize your safety.
+    </p>
+  </div>
+
+  <!-- FAQ -->
+  <section class="section">
+    <div class="section-header">
+      <i data-lucide="help-circle" width="32"></i>
+      <h3>Frequently Asked Questions</h3>
+    </div>
+    
+    <div class="faq-grid">
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFAQ(this)">
+          <h4>Is CampusMarket free to use?</h4>
+          <i data-lucide="chevron-down" class="faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <p>Yes! CampusMarket is completely free for all DUT students. We don't charge listing fees or take commissions. Our goal is to help students trade safely on campus.</p>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFAQ(this)">
+          <h4>How long does verification take?</h4>
+          <i data-lucide="chevron-down" class="faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <p>Usually within 24 hours. You'll receive a WhatsApp message asking for your DUT student ID photo. Once we verify you're a registered student, your listing goes live immediately.</p>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFAQ(this)">
+          <h4>Can I negotiate prices?</h4>
+          <i data-lucide="chevron-down" class="faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <p>Yes, if the seller marked their listing as "negotiable." Contact them on WhatsApp to discuss. Be respectful and make reasonable offers.</p>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFAQ(this)">
+          <h4>What if I get scammed?</h4>
+          <i data-lucide="chevron-down" class="faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <p>Report it to us immediately and contact DUT campus security. While we verify student status, we cannot guarantee transactions. This is why we strongly recommend meeting on campus, inspecting items, and using cash only.</p>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFAQ(this)">
+          <h4>Can I sell services like tutoring?</h4>
+          <i data-lucide="chevron-down" class="faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <p>Absolutely! We have a dedicated Tutoring category. List your subjects, hourly rate, and available times. Meet students at campus libraries for sessions.</p>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFAQ(this)">
+          <h4>How do I edit or delete my listing?</h4>
+          <i data-lucide="chevron-down" class="faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <p>Go to your Profile page and tap "My Listings." You can mark items as sold or delete them entirely. To edit details, you'll need to delete and create a new listing (editing feature coming soon).</p>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFAQ(this)">
+          <h4>What items are prohibited?</h4>
+          <i data-lucide="chevron-down" class="faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <p>Weapons, drugs, alcohol, tobacco, stolen goods, counterfeit items, and anything that violates DUT policies or South African law. See our <a href="terms.html" style="color: var(--accent);">Terms of Service</a> for the full list.</p>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFAQ(this)">
+          <h4>Can non-DUT students use this?</h4>
+          <i data-lucide="chevron-down" class="faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <p>No. CampusMarket is exclusively for registered DUT students. We verify every seller with their student ID to maintain a safe, trusted community.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA SECTION -->
+  <div class="cta-section">
+    <h3>Ready to Get Started?</h3>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+      Join hundreds of DUT students buying and selling safely on campus
+    </p>
+    
+    <div class="cta-buttons">
+      <a href="Categorypg.html" class="btn btn-primary">
+        <i data-lucide="search"></i>
+        Browse Listings
+      </a>
+      <a href="SellerPg.html" class="btn btn-secondary">
+        <i data-lucide="plus-circle"></i>
+        List an Item
+      </a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer style="text-align: center; padding: 40px 20px; border-top: 1px solid var(--border); margin-top: 60px;">
+    <p style="color: var(--text-secondary); margin-bottom: 12px;">
+      © 2026 CampusMarket DUT - Student Marketplace
+    </p>
+    <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+      <a href="terms.html" style="color: var(--accent); text-decoration: none;">Terms of Service</a>
+      <a href="privacy.html" style="color: var(--accent); text-decoration: none;">Privacy Policy</a>
+      <a href="mailto:magwaz08@gmail.com" style="color: var(--accent); text-decoration: none;">Contact</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+lucide.createIcons();
+
+function toggleFAQ(element) {
+  const faqItem = element.parentElement;
+  const answer = faqItem.querySelector('.faq-answer');
+  const isActive = faqItem.classList.contains('active');
+  
+  // Close all FAQs
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.classList.remove('active');
+    item.querySelector('.faq-answer').classList.remove('active');
+  });
+  
+  // Open clicked FAQ if it wasn't active
+  if (!isActive) {
+    faqItem.classList.add('active');
+    answer.classList.add('active');
+  }
+  
+  lucide.createIcons();
+}
+</script>
+</body>
+</html>

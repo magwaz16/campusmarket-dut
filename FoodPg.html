@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Food & Supplies - CampusMarket DUT</title>
+<link rel="stylesheet" href="TechPg.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+<!-- DATABASE CONNECTION -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+</head>
+
+<body>
+
+<header>
+   <div class="logo">
+    <img src="/Imgs/CM_Logo_1.png" alt="" class="logo-img">
+
+  <!--   <h1>CampusMarket DUT</h1> -->
+  </div>
+  <div class="header-actions">
+  <button class="search-btn" title="Search" id="openSearchBtn">
+    <i data-lucide="search"></i>
+  </button>
+  <button class="filter-btn" title="Filters" id="openFilterBtn">
+    <i data-lucide="filter"></i>
+  </button>
+  <button class="sell-btn" onclick="window.location.href='SellerPg.html'">
+    <i data-lucide="plus-circle"></i>
+    Sell
+  </button>
+</div>
+</header>
+<!-- Search Modal -->
+<div class="search-modal" id="searchModal">
+  <div class="search-modal-content">
+    <div class="search-modal-header">
+      <h3>Search Listings</h3>
+      <button class="search-modal-close" onclick="closeSearchModal()">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="search-input-wrapper">
+      <i data-lucide="search" class="search-icon-left"></i>
+      <input type="text" class="search-input-large" id="searchInputLarge" placeholder="Search by title, description, price...">
+      <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearch()">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="filter-modal" id="filterModal">
+  <div class="filter-modal-content">
+    <div class="search-modal-header">
+      <h3>Filter Listings</h3>
+      <button class="search-modal-close" onclick="closeFilterModal()">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    
+    <div class="filter-section">
+      <h4>Condition</h4>
+      <div class="filter-options" id="conditionFilters">
+        <div class="filter-option" data-value="Brand New">Brand New</div>
+        <div class="filter-option" data-value="Like New">Like New</div>
+        <div class="filter-option" data-value="Good">Good</div>
+        <div class="filter-option" data-value="Fair">Fair</div>
+        <div class="filter-option" data-value="Needs Repair">Needs Repair</div>
+      </div>
+    </div>
+    
+    <div class="filter-section">
+      <h4>Price Range</h4>
+      <div class="filter-options" id="priceFilters">
+        <div class="filter-option" data-value="0-500">Under R500</div>
+        <div class="filter-option" data-value="500-2000">R500 - R2,000</div>
+        <div class="filter-option" data-value="2000-5000">R2,000 - R5,000</div>
+        <div class="filter-option" data-value="5000-999999">Over R5,000</div>
+      </div>
+    </div>
+    
+    <div class="filter-actions">
+      <button class="filter-btn-clear" onclick="clearFilters()">Clear All</button>
+      <button class="filter-btn-apply" onclick="applyFilters()">Apply Filters</button>
+    </div>
+  </div>
+</div>
+
+<!-- Active Search/Filter Bar -->
+<div class="active-search-bar" id="activeSearchBar">
+  <span id="activeSearchText"></span>
+  <button onclick="clearAllFiltersAndSearch()" style="background:none;border:none;color:var(--accent);cursor:pointer;display:flex;align-items:center;gap:4px;">
+    <i data-lucide="x"></i> Clear
+  </button>
+</div>
+
+
+<!-- Category Header -->
+<section class="category-header">
+  <div class="category-info">
+    <div class="category-icon">🍕</div>
+    <div class="category-details">
+      <h2>Food & Supplies</h2>
+      <div class="category-stats">
+        <span id="statsText">Loading listings...</span>
+      </div>
+    </div>
+  </div>
+  <div class="category-safety">
+    <i data-lucide="shield"></i>
+    <span>Tip: Check expiry dates. Residence meetups acceptable for food items.</span>
+  </div>
+</section>
+
+<!-- Filters Bar -->
+<section class="filters-bar">
+  <div class="filter-tags">
+    <button class="filter-tag active" data-filter="all">
+      <i data-lucide="grid"></i>
+      All Food
+    </button>
+    <button class="filter-tag" data-filter="campus-steve-biko">
+      <i data-lucide="map-pin"></i>
+      Steve Biko
+    </button>
+    <button class="filter-tag" data-filter="campus-riston">
+      <i data-lucide="map-pin"></i>
+      Riston
+    </button>
+    <button class="filter-tag" data-filter="campus-ml-sultan">
+      <i data-lucide="map-pin"></i>
+      ML Sultan
+    </button>
+    <button class="filter-tag" data-filter="price-low">
+      <i data-lucide="arrow-down"></i>
+      Price: Low to High
+    </button>
+    <button class="filter-tag" data-filter="price-high">
+      <i data-lucide="arrow-up"></i>
+      Price: High to Low
+    </button>
+    <button class="filter-tag" data-filter="new">
+      <i data-lucide="zap"></i>
+      New Today
+    </button>
+  </div>
+</section>
+
+<!-- Listings Grid -->
+<main class="listings-container">
+  <div class="listings-grid" id="listingsGrid">
+    <!-- Listings will be dynamically generated -->
+  </div>
+  
+  <div class="empty-state" id="emptyState" style="display: none;">
+    <i data-lucide="shopping-cart"></i>
+    <h3>No food listings found</h3>
+    <p>Try adjusting your filters or check back later.</p>
+  </div>
+</main>
+
+
+<section>
+  <!-- Add before closing tag -->
+<footer style="text-align: center; padding: 40px 20px; border-top: 1px solid var(--border); margin-top: 60px;">
+  <p style="color: var(--text-secondary); margin-bottom: 12px;">
+    © 2026 CampusMarket DUT - Student Marketplace
+  </p>
+  <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+    <a href="terms.html" style="color: var(--accent); text-decoration: none;">Terms of Service</a>
+    <a href="privacy.html" style="color: var(--accent); text-decoration: none;">Privacy Policy</a>
+    <a href="mailto:magwaz08@gmail.com" style="color: var(--accent); text-decoration: none;">Contact</a>
+  </div>
+</footer>
+</section>
+
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <a href="index.html" class="nav-item">
+    <i data-lucide="home"></i>
+    <span>Home</span>
+  </a>
+  
+  <a href="Categorypg.html" class="nav-item">
+    <i data-lucide="compass"></i>
+    <span>Browse</span>
+  </a>
+  
+  <button class="sell-btn-nav" onclick="window.location.href='SellerPg.html'">
+    <i data-lucide="plus"></i>
+  </button>
+  
+  <a href="SavedPg.html" class="nav-item">
+    <i data-lucide="heart"></i>
+    <span>Saved</span>
+  </a>
+  
+  <a href="Profile.html" class="nav-item">
+    <i data-lucide="user"></i>
+    <span>Profile</span>
+  </a>
+</nav>
+
+<script>
+
+const CATEGORY = 'food'; // CATEGORY FOR FILTERING
+
+// ===== STATE =====
+let ALL_LISTINGS = [];
+let FILTERED_LISTINGS = [];
+let currentFilter = 'all';
+let activeSearch = '';
+let activeConditionFilter = null;
+let activePriceFilter = null;
+
+// ===== SANITIZATION =====
+function sanitizeHTML(str) {
+  if (!str) return '';
+  const temp = document.createElement('div');
+  temp.textContent = str;
+  return temp.innerHTML;
+}
+
+// ===== STORAGE MODULE =====
+const STORAGE_KEY = 'campusmarket_saved_items';
+function getSavedItems() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch (error) {
+    return [];
+  }
+}
+function saveItem(item) {
+  const items = getSavedItems();
+  if (!items.some(i => i.id === item.id)) {
+    items.unshift(item);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    return true;
+  }
+  return false;
+}
+function removeSavedItem(itemId) {
+  const items = getSavedItems().filter(i => i.id !== itemId);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  return true;
+}
+function isItemSaved(itemId) {
+  return getSavedItems().some(i => i.id === itemId);
+}
+
+// ===== SEARCH MODAL =====
+function openSearchModal() {
+  document.getElementById('searchModal').classList.add('active');
+  document.getElementById('searchInputLarge').focus();
+  lucide.createIcons();
+}
+function closeSearchModal() {
+  document.getElementById('searchModal').classList.remove('active');
+}
+document.getElementById('openSearchBtn').addEventListener('click', openSearchModal);
+
+// ===== LIVE SEARCH =====
+document.getElementById('searchInputLarge').addEventListener('input', (e) => {
+  const query = e.target.value.trim().toLowerCase();
+  const clearBtn = document.getElementById('searchClearBtn');
+  
+  if (query.length > 0) {
+    clearBtn.classList.add('active');
+  } else {
+    clearBtn.classList.remove('active');
+  }
+  
+  if (query.length < 2) {
+    document.getElementById('searchResults').innerHTML = '';
+    return;
+  }
+  
+  const results = ALL_LISTINGS.filter(listing => 
+    listing.title.toLowerCase().includes(query) ||
+    listing.description.toLowerCase().includes(query) ||
+    listing.price.toString().includes(query) ||
+    listing.seller_name.toLowerCase().includes(query) ||
+    listing.location.toLowerCase().includes(query) ||
+    listing.campus.toLowerCase().includes(query) ||
+    listing.condition.toLowerCase().includes(query)
+  );
+  
+  displaySearchResults(results, query);
+});
+
+function displaySearchResults(results, query) {
+  const container = document.getElementById('searchResults');
+  
+  if (results.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">No results found</p>';
+    return;
+  }
+  
+  container.innerHTML = results.slice(0, 5).map(listing => `
+    <div class="search-result-item" onclick="applySearchAndClose('${query}')">
+      <div style="font-weight:600;margin-bottom:4px;">${sanitizeHTML(listing.title)}</div>
+      <div style="font-size:0.9rem;color:var(--text-secondary);">
+        R${parseFloat(listing.price).toLocaleString()} • ${sanitizeHTML(listing.location)}
+      </div>
+    </div>
+  `).join('');
+}
+
+function clearSearch() {
+  document.getElementById('searchInputLarge').value = '';
+  document.getElementById('searchClearBtn').classList.remove('active');
+  document.getElementById('searchResults').innerHTML = '';
+}
+
+function applySearchAndClose(query) {
+  activeSearch = query.toLowerCase();
+  closeSearchModal();
+  applyAllFilters();
+  updateActiveBar();
+}
+
+// ===== FILTER MODAL =====
+function openFilterModal() {
+  document.getElementById('filterModal').classList.add('active');
+  lucide.createIcons();
+}
+function closeFilterModal() {
+  document.getElementById('filterModal').classList.remove('active');
+}
+document.getElementById('openFilterBtn').addEventListener('click', openFilterModal);
+
+// Filter option clicks
+document.querySelectorAll('.filter-option').forEach(option => {
+  option.addEventListener('click', function() {
+    const parent = this.parentElement.parentElement;
+    const isCondition = parent.querySelector('#conditionFilters');
+    
+    // Toggle active state
+    if (isCondition) {
+      document.querySelectorAll('#conditionFilters .filter-option').forEach(o => o.classList.remove('active'));
+      if (activeConditionFilter === this.dataset.value) {
+        activeConditionFilter = null;
+      } else {
+        this.classList.add('active');
+        activeConditionFilter = this.dataset.value;
+      }
+    } else {
+      document.querySelectorAll('#priceFilters .filter-option').forEach(o => o.classList.remove('active'));
+      if (activePriceFilter === this.dataset.value) {
+        activePriceFilter = null;
+      } else {
+        this.classList.add('active');
+        activePriceFilter = this.dataset.value;
+      }
+    }
+  });
+});
+
+function applyFilters() {
+  closeFilterModal();
+  applyAllFilters();
+  updateActiveBar();
+}
+
+function clearFilters() {
+  document.querySelectorAll('.filter-option').forEach(o => o.classList.remove('active'));
+  activeConditionFilter = null;
+  activePriceFilter = null;
+  closeFilterModal();
+  applyAllFilters();
+  updateActiveBar();
+}
+
+function clearAllFiltersAndSearch() {
+  activeSearch = '';
+  activeConditionFilter = null;
+  activePriceFilter = null;
+  document.querySelectorAll('.filter-option').forEach(o => o.classList.remove('active'));
+  clearSearch();
+  applyAllFilters();
+  updateActiveBar();
+}
+
+// ===== APPLY ALL FILTERS =====
+function applyAllFilters() {
+  FILTERED_LISTINGS = ALL_LISTINGS;
+  
+  // Apply search
+  if (activeSearch) {
+    FILTERED_LISTINGS = FILTERED_LISTINGS.filter(listing => 
+      listing.title.toLowerCase().includes(activeSearch) ||
+      listing.description.toLowerCase().includes(activeSearch) ||
+      listing.price.toString().includes(activeSearch) ||
+      listing.seller_name.toLowerCase().includes(activeSearch)
+    );
+  }
+  
+  // Apply condition filter
+  if (activeConditionFilter) {
+    FILTERED_LISTINGS = FILTERED_LISTINGS.filter(listing => 
+      listing.condition === activeConditionFilter
+    );
+  }
+  
+  // Apply price filter
+  if (activePriceFilter) {
+    const [min, max] = activePriceFilter.split('-').map(Number);
+    FILTERED_LISTINGS = FILTERED_LISTINGS.filter(listing => 
+      listing.price >= min && listing.price <= max
+    );
+  }
+  
+  // Apply quick filters (campus, price sort, new)
+  if (currentFilter.startsWith('campus-')) {
+    const campus = currentFilter.replace('campus-', '');
+    FILTERED_LISTINGS = FILTERED_LISTINGS.filter(l => l.campus === campus);
+  } else if (currentFilter === 'price-low') {
+    FILTERED_LISTINGS = [...FILTERED_LISTINGS].sort((a, b) => a.price - b.price);
+  } else if (currentFilter === 'price-high') {
+    FILTERED_LISTINGS = [...FILTERED_LISTINGS].sort((a, b) => b.price - a.price);
+  } else if (currentFilter === 'new') {
+    const today = new Date().toISOString().split('T')[0];
+    FILTERED_LISTINGS = FILTERED_LISTINGS.filter(l => l.created_at && l.created_at.startsWith(today));
+  }
+  
+  renderListings();
+}
+
+function updateActiveBar() {
+  const bar = document.getElementById('activeSearchBar');
+  const text = document.getElementById('activeSearchText');
+  const parts = [];
+  
+  if (activeSearch) parts.push(`Search: "${activeSearch}"`);
+  if (activeConditionFilter) parts.push(`Condition: ${activeConditionFilter}`);
+  if (activePriceFilter) {
+    const [min, max] = activePriceFilter.split('-');
+    parts.push(`Price: R${Number(min).toLocaleString()} - R${Number(max).toLocaleString()}`);
+  }
+  
+  if (parts.length > 0) {
+    text.textContent = parts.join(' • ');
+    bar.classList.add('active');
+  } else {
+    bar.classList.remove('active');
+  }
+  
+  lucide.createIcons();
+}
+
+// ===== FETCH LISTINGS =====
+async function fetchListings() {
+  const container = document.getElementById('listingsGrid');
+  
+  container.innerHTML = `
+    <div style="grid-column: 1/-1; text-align:center; padding:60px 20px;">
+      <i data-lucide="loader" class="spinning" style="font-size:48px; margin-bottom:16px;"></i>
+      <p>Loading listings...</p>
+    </div>
+  `;
+  lucide.createIcons();
+  
+  try {
+    const { data, error } = await supabaseClient
+      .from('listings')
+      .select('*')
+      .eq('category', CATEGORY)
+      .eq('status', 'active')
+      .eq('verified', true)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    ALL_LISTINGS = data || [];
+    FILTERED_LISTINGS = ALL_LISTINGS;
+    
+    // Update stats
+    const statsText = document.getElementById('statsText');
+    if (statsText && ALL_LISTINGS.length > 0) {
+      const prices = ALL_LISTINGS.map(l => l.price);
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      statsText.textContent = `${ALL_LISTINGS.length} active listings • From R${minPrice.toLocaleString()} to R${maxPrice.toLocaleString()}`;
+    }
+    
+    renderListings();
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align:center; padding:40px;">
+        <i data-lucide="wifi-off" style="font-size:48px; margin-bottom:16px;"></i>
+        <h3>Unable to load listings</h3>
+        <button onclick="fetchListings()" style="margin-top:16px; padding:12px 24px; background:var(--primary-gradient); border:none; border-radius:8px; color:white; cursor:pointer;">
+          Retry
+        </button>
+      </div>
+    `;
+    lucide.createIcons();
+  }
+}
+
+// ===== RENDER LISTINGS =====
+function renderListings() {
+  const container = document.getElementById('listingsGrid');
+  
+  if (FILTERED_LISTINGS.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align:center; padding:60px 20px;">
+        <i data-lucide="inbox" style="font-size:48px; margin-bottom:16px; opacity:0.5;"></i>
+        <h3>No listings found</h3>
+        <p style="color:var(--text-secondary);">Try adjusting your filters.</p>
+      </div>
+    `;
+    lucide.createIcons();
+    return;
+  }
+  
+  container.innerHTML = '';
+  
+  FILTERED_LISTINGS.forEach(listing => {
+    const card = document.createElement('div');
+    card.className = 'listing-card';
+    const isSaved = isItemSaved(listing.id);
+    
+    card.innerHTML = `
+      <div class="listing-image">
+        ${getCardThumbnailHTML(listing)}  
+        ${listing.verified ? '<div class="listing-badges"><div class="badge safe"><i data-lucide="shield-check" width="12"></i> Verified</div></div>' : ''}
+        <button class="save-btn ${isSaved ? 'saved' : ''}" data-id="${listing.id}">
+          <i data-lucide="heart" width="20" ${isSaved ? 'fill="#ef476f" color="#ef476f"' : ''}></i>
+        </button>
+      </div>
+      
+      <div class="listing-details">
+        <div class="listing-title">${sanitizeHTML(listing.title)}</div>
+        <div class="listing-price">R${parseFloat(listing.price).toLocaleString()}</div>
+        
+        <div class="listing-meta">
+          <div class="meta-item">
+            <i data-lucide="package" width="14"></i>
+            <span>${sanitizeHTML(listing.condition)}</span>
+          </div>
+          <div class="meta-item">
+            <i data-lucide="map-pin" width="14"></i>
+            <span>${sanitizeHTML(listing.location || listing.campus)}</span>
+          </div>
+        </div>
+        
+        <div class="seller-info">
+          <div class="seller-avatar">${listing.seller_name ? sanitizeHTML(listing.seller_name.substring(0, 2).toUpperCase()) : 'DS'}</div>
+          <div class="seller-details">
+            <div class="seller-name">${sanitizeHTML(listing.seller_name || 'DUT Student')}</div>
+            <div class="seller-rating">
+              <i data-lucide="star" width="12" fill="#fbbf24" color="#fbbf24"></i>
+              <span>New seller</span>
+            </div>
+          </div>
+        </div>
+        
+        <button class="whatsapp-btn">
+          <i data-lucide="message-circle"></i>
+          Message on WhatsApp
+        </button>
+      </div>
+    `;
+    
+    // Save button
+    card.querySelector('.save-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSave(listing, e.currentTarget);
+    });
+    
+    // WhatsApp button
+    card.querySelector('.whatsapp-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const message = `Hi! I'm interested in your "${sanitizeHTML(listing.title)}" on CampusMarket DUT. Is it still available?`;
+      window.open(`https://wa.me/${listing.seller_phone}?text=${encodeURIComponent(message)}`, '_blank');
+    });
+    
+    // Card click
+    card.addEventListener('click', () => {
+      window.location.href = `ListingDetails.html?id=${listing.id}`;
+    });
+    
+    container.appendChild(card);
+  });
+  
+  lucide.createIcons();
+}
+
+function getCardThumbnailHTML(listing) {
+  if (listing.images && listing.images.length > 0) {
+    return `<img src="${listing.images[0]}" alt="${sanitizeHTML(listing.title)}" class="listing-thumb"
+      onerror="this.parentElement.innerHTML='<div class=\\'listing-emoji-wrap\\'>${listing.emoji || '📦'}</div>'">`;
+  }
+  return `<div class="listing-emoji-wrap">${listing.emoji || '📦'}</div>`;
+}
+
+// ===== SAVE TOGGLE =====
+function toggleSave(listing, btn) {
+  const isSaved = isItemSaved(listing.id);
+  
+  if (isSaved) {
+    removeSavedItem(listing.id);
+    btn.classList.remove('saved');
+    btn.innerHTML = '<i data-lucide="heart" width="20"></i>';
+    showNotification('Removed from saved');
+  } else {
+    saveItem({
+      id: listing.id,
+      title: listing.title,
+      price: listing.price,
+      category: CATEGORY,
+      emoji: listing.emoji,
+      campus: listing.campus,
+      location: listing.location,
+      sellerName: listing.seller_name,
+      condition: listing.condition,
+      description: listing.description || '',
+      status: 'available'
+    });
+    btn.classList.add('saved');
+    btn.innerHTML = '<i data-lucide="heart" width="20" fill="#ef476f" color="#ef476f"></i>';
+    showNotification('Saved! View in Saved page');
+  }
+  
+  lucide.createIcons();
+}
+
+function showNotification(message) {
+  const notif = document.createElement('div');
+  notif.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><i data-lucide="heart"></i><span>${message}</span></div>`;
+  Object.assign(notif.style, {
+    position:'fixed', top:'100px', right:'20px',
+    background:'var(--bg-card)', color:'var(--text-primary)',
+    padding:'12px 20px', borderRadius:'12px',
+    border:'1px solid var(--border)', zIndex:'1000',
+    animation:'slideIn 0.3s ease'
+  });
+  document.body.appendChild(notif);
+  lucide.createIcons();
+  setTimeout(() => notif.remove(), 2000);
+}
+
+// ===== QUICK FILTERS =====
+document.querySelectorAll('.filter-tag').forEach(tag => {
+  tag.addEventListener('click', () => {
+    document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+    tag.classList.add('active');
+    currentFilter = tag.dataset.filter;
+    applyAllFilters();
+  });
+});
+
+// ===== ANIMATIONS =====
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideIn { 
+    from { transform: translateX(100%); opacity: 0; } 
+    to { transform: translateX(0); opacity: 1; } 
+  }
+  .spinning { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+`;
+document.head.appendChild(style);
+
+// ===== INIT =====
+lucide.createIcons();
+fetchListings();
+</script>
+<!-- <script>
+// ================= XSS SANITIZATION =================
+function sanitizeHTML(str) {
+  if (!str) return '';
+  const temp = document.createElement('div');
+  temp.textContent = str;
+  return temp.innerHTML;
+}
+
+// ================= STORAGE MODULE =================
+const STORAGE_KEY = 'campusmarket_saved_items';
+
+function getSavedItems() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch (error) {
+    console.error('Error reading saved items:', error);
+    return [];
+  }
+}
+
+function saveItem(item) {
+  const items = getSavedItems();
+  const exists = items.some(i => i.id === item.id);
+  
+  if (!exists) {
+    items.unshift(item);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    return true;
+  }
+  return false;
+}
+
+function removeSavedItem(itemId) {
+  const items = getSavedItems();
+  const filtered = items.filter(i => i.id !== itemId);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+  return true;
+}
+
+function isItemSaved(itemId) {
+  return getSavedItems().some(i => i.id === itemId);
+}
+
+// ================= FETCH LISTINGS FROM SUPABASE =================
+let ALL_LISTINGS = [];
+let currentFilter = 'all';
+
+async function fetchListings() {
+  const container = document.getElementById('listingsGrid');
+  
+  // Show loading
+  container.innerHTML = `
+    <div style="grid-column: 1/-1; text-align:center; padding:60px 20px;">
+      <i data-lucide="loader" class="spinning" style="font-size:48px; margin-bottom:16px;"></i>
+      <p>Loading food listings...</p>
+    </div>
+  `;
+  lucide.createIcons();
+  
+  try {
+    console.log('📡 Fetching food listings from Supabase...');
+    
+    const { data, error } = await supabaseClient
+  .from('listings')
+  .select('*')
+  .eq('category', 'food')
+  .eq('status', 'active')
+  .eq('verified', true)
+  .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    console.log('✅ Fetched listings:', data);
+    ALL_LISTINGS = data || [];
+    
+    // Update stats
+    const statsText = document.getElementById('statsText');
+    if (statsText && ALL_LISTINGS.length > 0) {
+      const prices = ALL_LISTINGS.map(l => l.price);
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      statsText.textContent = `${ALL_LISTINGS.length} active listings • From R${minPrice.toLocaleString()} to R${maxPrice.toLocaleString()}`;
+    }
+    
+    renderListings();
+    
+  } catch (error) {
+    console.error('❌ Error fetching listings:', error);
+    
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align:center; padding:40px;">
+        <i data-lucide="wifi-off" style="font-size:48px; margin-bottom:16px;"></i>
+        <h3>Unable to load listings</h3>
+        <p>Please check your connection and try again.</p>
+        <button onclick="fetchListings()" style="margin-top:16px; padding:12px 24px; background:var(--primary-gradient); border:none; border-radius:8px; color:white; cursor:pointer;">
+          <i data-lucide="refresh-cw"></i> Retry
+        </button>
+      </div>
+    `;
+    lucide.createIcons();
+  }
+}
+
+// ================= RENDER LISTINGS =================
+function renderListings() {
+  const container = document.getElementById('listingsGrid');
+  
+  if (!container) {
+    console.error('❌ Container #listingsGrid not found!');
+    return;
+  }
+  
+  // Apply current filter
+  let displayListings = ALL_LISTINGS;
+  
+  if (currentFilter.startsWith('campus-')) {
+    const campus = currentFilter.replace('campus-', '');
+    displayListings = ALL_LISTINGS.filter(l => l.campus === campus);
+  } else if (currentFilter === 'price-low') {
+    displayListings = [...ALL_LISTINGS].sort((a, b) => a.price - b.price);
+  } else if (currentFilter === 'price-high') {
+    displayListings = [...ALL_LISTINGS].sort((a, b) => b.price - a.price);
+  } else if (currentFilter === 'new') {
+    const today = new Date().toISOString().split('T')[0];
+    displayListings = ALL_LISTINGS.filter(l => l.created_at && l.created_at.startsWith(today));
+  }
+  
+  if (displayListings.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align:center; padding:60px 20px;">
+        <i data-lucide="inbox" style="font-size:48px; margin-bottom:16px; opacity:0.5;"></i>
+        <h3>No food listings found</h3>
+        <p style="color:var(--text-secondary); margin-top:8px;">
+          ${ALL_LISTINGS.length === 0 ? 'Be the first to list a food item!' : 'Try adjusting your filters.'}
+        </p>
+      </div>
+    `;
+    lucide.createIcons();
+    return;
+  }
+  
+  container.innerHTML = '';
+  
+  displayListings.forEach(listing => {
+    const card = document.createElement('div');
+    card.className = 'listing-card';
+    const isSaved = isItemSaved(listing.id);
+    
+       card.innerHTML = `
+  <div class="listing-image">
+    ${getCardThumbnailHTML(listing)}  
+    ${listing.verified ? '<div class="listing-badges">...' : ''}
+        </div>
+        ${listing.verified ? '<div class="listing-badges"><div class="badge safe"><i data-lucide="shield-check" width="12"></i> Verified</div></div>' : ''}
+        <button class="save-btn ${isSaved ? 'saved' : ''}" data-id="${listing.id}">
+          <i data-lucide="heart" width="20" ${isSaved ? 'fill="#ef476f" color="#ef476f"' : ''}></i>
+        </button>
+      </div>
+      
+      <div class="listing-details">
+        <div class="listing-title">${sanitizeHTML(listing.title)}</div>
+        <div class="listing-price">R${parseFloat(listing.price).toLocaleString()}</div>
+        
+        <div class="listing-meta">
+          <div class="meta-item">
+            <i data-lucide="package" width="14"></i>
+            <span>${sanitizeHTML(listing.condition)}</span>
+          </div>
+          <div class="meta-item">
+            <i data-lucide="map-pin" width="14"></i>
+            <span>${sanitizeHTML(listing.location || listing.campus)}</span>
+          </div>
+        </div>
+        
+        <div class="seller-info">
+          <div class="seller-avatar">${listing.seller_name ? sanitizeHTML(listing.seller_name.substring(0, 2).toUpperCase()) : 'DS'}</div>
+          <div class="seller-details">
+            <div class="seller-name">${sanitizeHTML(listing.seller_name || 'DUT Student')}</div>
+            <div class="seller-rating">
+              <i data-lucide="star" width="12" fill="#fbbf24" color="#fbbf24"></i>
+              <span>New seller</span>
+            </div>
+          </div>
+        </div>
+        
+        <button class="whatsapp-btn" data-id="${listing.id}">
+          <i data-lucide="message-circle"></i>
+          Message on WhatsApp
+        </button>
+      </div>
+    `;
+    
+    // Save button
+    const saveBtn = card.querySelector('.save-btn');
+    saveBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSave(listing, saveBtn);
+    });
+    
+    // WhatsApp button
+    const whatsappBtn = card.querySelector('.whatsapp-btn');
+    whatsappBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const message = `Hi! I'm interested in your "${sanitizeHTML(listing.title)}" on CampusMarket DUT. Is it still available?`;
+      window.open(`https://wa.me/${listing.seller_phone}?text=${encodeURIComponent(message)}`, '_blank');
+    });
+    
+    // Card click
+    card.addEventListener('click', () => {
+      window.location.href = `ListingDetails.html?id=${listing.id}`;
+    });
+    
+    container.appendChild(card);
+  });
+  
+  lucide.createIcons();
+}
+
+// ================= SAVE TOGGLE =================
+function toggleSave(listing, btn) {
+  const isSaved = isItemSaved(listing.id);
+  
+  if (isSaved) {
+    removeSavedItem(listing.id);
+    btn.classList.remove('saved');
+    btn.innerHTML = '<i data-lucide="heart" width="20"></i>';
+    showNotification('Removed from saved');
+  } else {
+    const itemToSave = {
+      id: listing.id,
+      title: listing.title,
+      price: listing.price,
+      category: 'food',
+      emoji: listing.emoji || '🍕',
+      campus: listing.campus,
+      location: listing.location,
+      sellerName: listing.seller_name,
+      condition: listing.condition,
+      description: listing.description || '',
+      status: 'available'
+    };
+    saveItem(itemToSave);
+    btn.classList.add('saved');
+    btn.innerHTML = '<i data-lucide="heart" width="20" fill="#ef476f" color="#ef476f"></i>';
+    showNotification('Saved! View in Saved page');
+  }
+  
+  lucide.createIcons();
+}
+
+// ================= NOTIFICATION =================
+function showNotification(message) {
+  const notif = document.createElement('div');
+  notif.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><i data-lucide="heart"></i><span>${message}</span></div>`;
+  Object.assign(notif.style, {
+    position:'fixed', top:'100px', right:'20px',
+    background:'var(--bg-card)', color:'var(--text-primary)',
+    padding:'12px 20px', borderRadius:'12px',
+    border:'1px solid var(--border)', zIndex:'1000',
+    animation:'slideIn 0.3s ease'
+  });
+  document.body.appendChild(notif);
+  lucide.createIcons();
+  setTimeout(() => {
+    notif.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => notif.remove(), 300);
+  }, 2000);
+}
+
+// ================= FILTER HANDLERS =================
+document.querySelectorAll('.filter-tag').forEach(tag => {
+  tag.addEventListener('click', () => {
+    document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+    tag.classList.add('active');
+    currentFilter = tag.dataset.filter;
+    renderListings();
+  });
+});
+
+// ================= BUTTON HANDLERS =================
+document.querySelector('.search-btn').addEventListener('click', () => {
+  alert('Search coming soon!');
+});
+
+document.querySelector('.filter-btn').addEventListener('click', () => {
+  alert('Advanced filters coming soon!');
+});
+
+
+// ================ HELPER FUNCTIONS ===============
+// Returns image or emoji for card thumbnail
+function getCardThumbnailHTML(listing) {
+  if (listing.images && listing.images.length > 0) {
+    return `<img
+      src="${listing.images[0]}"
+      alt="${sanitizeHTML(listing.title)}"
+      class="listing-thumb"
+      onerror="this.parentElement.innerHTML='<div class=\\'listing-emoji-wrap\\'>${listing.emoji || '📦'}</div>'"
+    >`;
+  }
+  return `<div class="listing-emoji-wrap">${listing.emoji || '📦'}</div>`;
+}
+
+// ================= INITIALIZATION =================
+lucide.createIcons();
+fetchListings();
+
+// Add animation styles
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideIn { 
+    from { transform: translateX(100%); opacity: 0; } 
+    to { transform: translateX(0); opacity: 1; } 
+  }
+  @keyframes slideOut { 
+    from { transform: translateX(0); opacity: 1; } 
+    to { transform: translateX(100%); opacity: 0; } 
+  }
+  .spinning {
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+document.head.appendChild(style);
+</script> -->
+</body>
+</html>

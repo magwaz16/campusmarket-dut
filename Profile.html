@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Profile - CampusMarket DUT</title>
+<link rel="stylesheet" href="Profile.css">
+
+<!-- DATABASE CONNECTION -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+<script src="session-helper.js"></script>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">
+    <a href="index.html">
+      <img src="/Imgs/CM_Logo_1.png" alt=" CampusMarket DUT Logo" class="logo-img">
+     <!--  <h1>CampusMarket DUT</h1> -->
+    </a>
+  </div>
+  <div class="header-actions">
+    <button class="settings-btn" title="Settings" id="settingsBtn">
+      <i data-lucide="settings"></i>
+    </button>
+  </div>
+</header>
+
+<!-- Profile Header -->
+<section class="profile-header">
+  <div class="profile-info">
+    <div class="profile-avatar" id="userAvatar">DS</div>
+    <div class="profile-details">
+      <h2 id="userName">DUT Student</h2>
+      <div class="profile-verified">
+        <i data-lucide="shield-check"></i>
+        <span>Verified DUT Student</span>
+      </div>
+      <div class="profile-stats">
+        <div class="stat">
+          <div class="stat-value">New</div>
+          <div class="stat-label">Rating</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="totalListings">0</div>
+          <div class="stat-label">Listings</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">100%</div>
+          <div class="stat-label">Response Rate</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="savedCount">0</div>
+          <div class="stat-label">Saved Items</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Profile Tabs -->
+<div class="profile-tabs">
+  <button class="tab-btn active" data-tab="listings">
+    <i data-lucide="package"></i>
+    <span>My Listings</span>
+  </button>
+  <button class="tab-btn" data-tab="saved">
+    <i data-lucide="heart"></i>
+    <span>Saved</span>
+  </button>
+  <button class="tab-btn" data-tab="settings">
+    <i data-lucide="settings"></i>
+    <span>Settings</span>
+  </button>
+</div>
+
+<!-- Tab Contents -->
+<main>
+  <!-- My Listings Tab -->
+  <div class="tab-content active" id="listings-tab">
+    <div class="listings-header">
+      <h3 class="section-title">
+        <i data-lucide="package"></i>
+        <span>My Listings</span>
+      </h3>
+      <button class="action-btn" onclick="window.location.href='SellerPg.html'">
+        <i data-lucide="plus"></i>
+        Add New
+      </button>
+    </div>
+    
+    <div class="listings-grid" id="myListingsGrid">
+      <div style="grid-column: 1/-1; text-align:center; padding:60px 20px;">
+        <i data-lucide="loader" class="spinning" style="font-size:48px; margin-bottom:16px;"></i>
+        <p>Loading your listings...</p>
+      </div>
+    </div>
+    
+    <div class="empty-state" id="emptyListings" style="display:none;">
+      <i data-lucide="package"></i>
+      <h3>No listings yet</h3>
+      <p>Ready to sell? Create your first listing!</p>
+      <button class="action-btn" onclick="window.location.href='SellerPg.html'">
+        <i data-lucide="plus"></i>
+        Create Listing
+      </button>
+    </div>
+  </div>
+  
+  <!-- Saved Tab -->
+  <div class="tab-content" id="saved-tab">
+    <div class="listings-header">
+      <h3 class="section-title">
+        <i data-lucide="heart"></i>
+        <span>Saved Items</span>
+      </h3>
+      <button class="action-btn clear-saved" id="clearSavedBtn" style="display:none;">
+        <i data-lucide="trash-2"></i>
+        Clear All
+      </button>
+    </div>
+    
+    <div class="listings-grid" id="savedItemsGrid"></div>
+    
+    <div class="saved-empty" id="emptySaved">
+      <i data-lucide="heart"></i>
+      <h3>No saved items yet</h3>
+      <p>When you find listings you like, tap the heart to save them here.</p>
+      <button class="action-btn" onclick="window.location.href='TechPg.html'">
+        <i data-lucide="search"></i>
+        Browse Listings
+      </button>
+    </div>
+  </div>
+  
+  <!-- Settings Tab -->
+  <div class="tab-content" id="settings-tab">
+    <div class="settings-section">
+      <h3><i data-lucide="user"></i> Profile Information</h3>
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Name</div>
+          <div class="setting-description" id="profileName">DUT Student</div>
+        </div>
+      </div>
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Phone</div>
+          <div class="setting-description" id="profilePhone">Not set</div>
+        </div>
+      </div>
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Campus</div>
+          <div class="setting-description" id="profileCampus">Steve Biko Campus</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="settings-section">
+      <h3><i data-lucide="bell"></i> Notifications</h3>
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">WhatsApp Messages</div>
+          <div class="setting-description">Get notified when buyers message you</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notifMessages" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">New Listings Alert</div>
+          <div class="setting-description">When items in saved categories are posted</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notifNewListings">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+    
+    <div class="settings-section">
+      <h3><i data-lucide="database"></i> Data Management</h3>
+      <button class="action-btn" onclick="exportMyData()" style="margin-bottom: 12px;">
+        <i data-lucide="download"></i>
+        Export My Data
+      </button>
+      <button class="action-btn" onclick="clearMyData()" style="margin-bottom: 12px;">
+        <i data-lucide="trash-2"></i>
+        Clear All Saved Items
+      </button>
+    </div>
+  </div>
+</main>
+
+<style>
+.listing-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+.listing-stats span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.listing-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+.listing-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.condition-badge {
+  background: rgba(6, 214, 160, 0.15);
+  color: var(--accent);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+.empty-state i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+.empty-state h3 {
+  margin-bottom: 8px;
+  color: white;
+}
+.empty-state p {
+  margin-bottom: 20px;
+}
+.clear-saved {
+  background: rgba(239, 71, 111, 0.1);
+  color: #ef476f;
+  border-color: #ef476f;
+}
+.clear-saved:hover {
+  background: rgba(239, 71, 111, 0.2);
+}
+.spinning {
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.status-active {
+  background: rgba(6, 214, 160, 0.2);
+  color: #06d6a0;
+}
+.status-sold {
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+}
+.status-pending {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+}
+</style>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <a href="index.html" class="nav-item">
+    <i data-lucide="home"></i>
+    <span>Home</span>
+  </a>
+  <a href="Categorypg.html" class="nav-item">
+    <i data-lucide="compass"></i>
+    <span>Browse</span>
+  </a>
+  <button class="sell-btn-nav" onclick="window.location.href='SellerPg.html'">
+    <i data-lucide="plus"></i>
+  </button>
+  <a href="SavedPg.html" class="nav-item">
+    <i data-lucide="heart"></i>
+    <span>Saved</span>
+  </a>
+  <a href="Profile.html" class="nav-item active">
+    <i data-lucide="user"></i>
+    <span>Profile</span>
+  </a>
+</nav>
+
+<script>
+lucide.createIcons();
+
+// ================= STORAGE MODULE =================
+const STORAGE_KEY = 'campusmarket_saved_items';
+const SETTINGS_KEY = 'campusmarket_settings';
+
+
+function sanitizeHTML(str) {
+  if (!str) return '';
+  const temp = document.createElement('div');
+  temp.textContent = str;
+  return temp.innerHTML;
+}
+
+
+function getSavedItems() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function removeSavedItem(itemId) {
+  const items = getSavedItems().filter(i => i.id !== itemId);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+function clearAllSaved() {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+function getSettings() {
+  try {
+    const s = localStorage.getItem(SETTINGS_KEY);
+    return s ? JSON.parse(s) : { notifications: { messages: true, newListings: false } };
+  } catch (e) {
+    return { notifications: { messages: true, newListings: false } };
+  }
+}
+
+function saveSettings(settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+// ================= HELPER FUNCTIONS =================
+// FIX: Added missing getInitials() function
+function getInitials(name) {
+  if (!name) return 'DS';
+  const parts = name.trim().split(' ').filter(p => p.length > 0);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+}
+
+// ================= MY LISTINGS =================
+let MY_LISTINGS = [];
+
+// FIX: Completely rewrote fetchMyListings() - had broken try/catch, missing error
+// destructuring, missing closing brace, missing hideSellerTabs call
+async function fetchMyListings() {
+  const grid = document.getElementById('myListingsGrid');
+
+  try {
+    // Load session from Supabase
+    const session = await loadSellerSession();
+
+    if (!session) {
+      // User is a buyer - hide seller tab
+      hideSellerTabs();
+      return;
+    }
+
+    // Update profile header from session data
+    const displayName = session.seller_name || 'DUT Student';
+    document.getElementById('userName').textContent = displayName;
+    document.getElementById('userAvatar').textContent = getInitials(displayName);
+    document.getElementById('profileName').textContent = displayName;
+    document.getElementById('profilePhone').textContent = session.seller_phone || 'Not set';
+
+    console.log('📡 Fetching listings for:', session.seller_phone);
+
+    // FIX: Properly destructure both data AND error from query
+    const { data, error } = await supabaseClient
+      .from('listings')
+      .select('*')
+      .eq('seller_phone', session.seller_phone)
+      .order('created_at', { ascending: false });
+
+    // FIX: Now error is actually defined so this check works
+    if (error) throw error;
+
+    console.log('✅ Fetched your listings:', data);
+    MY_LISTINGS = data || [];
+
+    // Update stats
+    document.getElementById('totalListings').textContent = MY_LISTINGS.length;
+
+    if (MY_LISTINGS.length === 0) {
+      grid.style.display = 'none';
+      document.getElementById('emptyListings').style.display = 'block';
+      lucide.createIcons();
+    } else {
+      renderMyListings();
+    }
+
+  } catch (error) {
+    console.error('❌ Error fetching listings:', error);
+    grid.innerHTML = `
+      <div style="grid-column: 1/-1; text-align:center; padding:40px;">
+        <i data-lucide="wifi-off" style="font-size:48px; margin-bottom:16px;"></i>
+        <h3>Unable to load your listings</h3>
+        <p>Please check your connection and try again.</p>
+        <button onclick="fetchMyListings()" style="margin-top:16px; padding:12px 24px; background:var(--primary-gradient); border:none; border-radius:8px; color:white; cursor:pointer;">
+          <i data-lucide="refresh-cw"></i> Retry
+        </button>
+      </div>
+    `;
+    lucide.createIcons();
+  }
+} // FIX: Added the missing closing brace for fetchMyListings()
+
+// FIX: Added the completely missing hideSellerTabs() function
+function hideSellerTabs() {
+  console.log('👁️ Buyer-only view - hiding seller tabs');
+
+  // Hide "My Listings" tab button
+  const listingsTab = document.querySelector('[data-tab="listings"]');
+  if (listingsTab) listingsTab.style.display = 'none';
+
+  // Default to Saved tab
+  const savedTab = document.querySelector('[data-tab="saved"]');
+  if (savedTab) savedTab.click();
+
+  // Update stats
+  document.getElementById('totalListings').textContent = '0';
+
+  // Show CTA in the listings grid area
+  const grid = document.getElementById('myListingsGrid');
+  if (grid) grid.style.display = 'none';
+
+  const emptyListings = document.getElementById('emptyListings');
+  if (emptyListings) {
+    emptyListings.style.display = 'block';
+    emptyListings.innerHTML = `
+      <i data-lucide="store"></i>
+      <h3>Start Selling on CampusMarket</h3>
+      <p>Join hundreds of DUT students buying and selling on campus!</p>
+      <button class="action-btn" onclick="window.location.href='SellerPg.html'">
+        <i data-lucide="plus"></i>
+        Create Your First Listing
+      </button>
+    `;
+    lucide.createIcons();
+  }
+}
+
+
+// ================= RENDER MY LISTINGS =================
+function renderMyListings() {
+  const grid = document.getElementById('myListingsGrid');
+  const emptyState = document.getElementById('emptyListings');
+
+  if (MY_LISTINGS.length === 0) {
+    grid.style.display = 'none';
+    emptyState.style.display = 'block';
+    lucide.createIcons();
+    return;
+  }
+
+  grid.style.display = 'grid';
+  emptyState.style.display = 'none';
+  grid.innerHTML = '';
+
+  // Helper function for image/emoji rendering
+  function getProfileThumbHTML(listing) {
+    if (listing.images && listing.images.length > 0) {
+      return `<img src="${listing.images[0]}" 
+                   class="profile-listing-thumb" 
+                   alt="${sanitizeHTML(listing.title)}"
+                   onerror="this.outerHTML='<div class=\\'profile-listing-emoji\\'>${listing.emoji || '📦'}</div>'">`;
+    }
+    return `<div class="profile-listing-emoji">${listing.emoji || '📦'}</div>`;
+  }
+
+  MY_LISTINGS.forEach(listing => {
+    const card = document.createElement('div');
+    card.className = 'profile-listing-card';
+
+    const statusClass = listing.status === 'active' ? 'status-active' :
+                        listing.status === 'sold'   ? 'status-sold'   : 'status-pending';
+    const statusText  = listing.status === 'active' ? 'Active' :
+                        listing.status === 'sold'   ? 'Sold'   : 'Pending';
+
+    // Determine which actions to show based on status
+    let actionsHTML = '';
+    
+    if (listing.status === 'pending') {
+      // Pending: Only view and delete
+      actionsHTML = `
+        <button class="action-btn view" data-id="${listing.id}">
+          <i data-lucide="eye"></i>
+          View
+        </button>
+        <button class="action-btn delete" data-id="${listing.id}">
+          <i data-lucide="trash-2"></i>
+          Delete
+        </button>
+      `;
+    } else if (listing.status === 'active') {
+      // Active: View, Mark as Sold, Delete
+      actionsHTML = `
+        <button class="action-btn view" data-id="${listing.id}">
+          <i data-lucide="eye"></i>
+          View
+        </button>
+        <button class="action-btn mark-sold" data-id="${listing.id}">
+          <i data-lucide="check-circle"></i>
+          Mark Sold
+        </button>
+        <button class="action-btn delete" data-id="${listing.id}">
+          <i data-lucide="trash-2"></i>
+          Delete
+        </button>
+      `;
+    } else if (listing.status === 'sold') {
+      // Sold: Only view and delete
+      actionsHTML = `
+        <button class="action-btn view" data-id="${listing.id}">
+          <i data-lucide="eye"></i>
+          View
+        </button>
+        <button class="action-btn delete" data-id="${listing.id}">
+          <i data-lucide="trash-2"></i>
+          Delete
+        </button>
+      `;
+    }
+
+    card.innerHTML = `
+      ${getProfileThumbHTML(listing)}
+      <div class="listing-status ${statusClass}">${statusText}</div>
+      <div class="listing-info">
+        <div class="listing-preview-title">${listing.title}</div>
+        <div class="listing-preview-price">R${parseFloat(listing.price).toLocaleString()}</div>
+      </div>
+      <div class="listing-stats">
+        <span><i data-lucide="eye" width="14"></i> ${listing.views || 0} views</span>
+        <span><i data-lucide="shield-check" width="14"></i> ${listing.verified ? 'Verified' : 'Pending'}</span>
+      </div>
+      <div class="listing-actions">
+        ${actionsHTML}
+      </div>
+    `;
+
+    // Click whole card to view (except buttons)
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('button')) {
+        window.location.href = `ListingDetails.html?id=${listing.id}`;
+      }
+    });
+
+    // View button
+    const viewBtn = card.querySelector('.view');
+    if (viewBtn) {
+      viewBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.location.href = `ListingDetails.html?id=${listing.id}`;
+      });
+    }
+
+    // Mark as Sold button
+    const soldBtn = card.querySelector('.mark-sold');
+    if (soldBtn) {
+      soldBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        markListingAsSold(listing.id, listing.title);
+      });
+    }
+
+    // Delete button
+    const deleteBtn = card.querySelector('.delete');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteListing(listing.id, listing.title);
+      });
+    }
+
+    // Re-activate button
+const reactivateBtn = card.querySelector('.reactivate');
+if (reactivateBtn) {
+  reactivateBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    reactivateListing(listing.id, listing.title);
+  });
+}
+
+    grid.appendChild(card);
+  });
+
+  lucide.createIcons();
+}
+
+// ================= RE-ACTIVATE LISTING =================
+async function reactivateListing(listingId, title) {
+  if (!confirm(`Re-activate "${title}"?\n\nThis will make it visible in browse again (requires admin approval).`)) return;
+
+  try {
+    const { error } = await supabaseClient
+      .from('listings')
+      .update({ 
+        status: 'pending',
+        verified: false 
+      })
+      .eq('id', listingId);
+
+    if (error) throw error;
+
+    showSuccessNotification('✅ Listing sent for re-approval!');
+    await fetchMyListings();
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('Sorry, there was an error. Please try again.');
+  }
+}
+
+// ================= MARK LISTING AS SOLD =================
+async function markListingAsSold(listingId, title) {
+  if (!confirm(`Mark "${title}" as SOLD?\n\nThis will remove it from active listings. You can still view it in your profile.`)) return;
+
+  // Show loading state
+  const cards = document.querySelectorAll('.profile-listing-card');
+  cards.forEach(card => {
+    const btn = card.querySelector(`[data-id="${listingId}"].mark-sold`);
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader" class="spinning"></i> Updating...';
+      lucide.createIcons();
+    }
+  });
+
+  try {
+    const { error } = await supabaseClient
+      .from('listings')
+      .update({ status: 'sold' })
+      .eq('id', listingId);
+
+    if (error) throw error;
+
+    // Show success notification
+    showSuccessNotification('✅ Listing marked as sold!');
+    
+    // Refresh listings
+    await fetchMyListings();
+  } catch (error) {
+    console.error('❌ Error marking as sold:', error);
+    alert('Sorry, there was an error. Please try again.');
+    
+    // Re-enable button on error
+    cards.forEach(card => {
+      const btn = card.querySelector(`[data-id="${listingId}"].mark-sold`);
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="check-circle"></i> Mark Sold';
+        lucide.createIcons();
+      }
+    });
+  }
+}
+
+// ================= RE-ACTIVATE LISTING =================
+async function reactivateListing(listingId, title) {
+  if (!confirm(`Re-activate "${title}"?\n\nThis will make it visible in browse again (requires admin approval).`)) return;
+
+  try {
+    const { error } = await supabaseClient
+      .from('listings')
+      .update({ 
+        status: 'pending',
+        verified: false 
+      })
+      .eq('id', listingId);
+
+    if (error) throw error;
+
+    showSuccessNotification('✅ Listing sent for re-approval!');
+    await fetchMyListings();
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('Sorry, there was an error. Please try again.');
+  }
+}
+
+
+// ================= SUCCESS NOTIFICATION =================
+function showSuccessNotification(message) {
+  const notification = document.createElement('div');
+  notification.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;">
+      <i data-lucide="check-circle" style="color:#06d6a0;"></i>
+      <span>${message}</span>
+    </div>
+  `;
+  
+  Object.assign(notification.style, {
+    position: 'fixed',
+    top: '100px',
+    right: '20px',
+    background: 'var(--bg-card)',
+    color: 'var(--text-primary)',
+    padding: '16px 24px',
+    borderRadius: '12px',
+    border: '1px solid #06d6a0',
+    boxShadow: '0 10px 40px rgba(6, 214, 160, 0.3)',
+    zIndex: '1000',
+    animation: 'slideIn 0.3s ease'
+  });
+  
+  document.body.appendChild(notification);
+  lucide.createIcons();
+  
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+
+// ================= SAVED ITEMS =================
+function renderSavedItems() {
+  const grid     = document.getElementById('savedItemsGrid');
+  const empty    = document.getElementById('emptySaved');
+  const clearBtn = document.getElementById('clearSavedBtn');
+  const items    = getSavedItems();
+
+  if (items.length === 0) {
+    grid.style.display = 'none';
+    empty.style.display = 'block';
+    clearBtn.style.display = 'none';
+    lucide.createIcons();
+    return;
+  }
+
+  grid.style.display = 'grid';
+  empty.style.display = 'none';
+  clearBtn.style.display = 'flex';
+  grid.innerHTML = '';
+
+  items.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'profile-listing-card';
+
+    card.innerHTML = `
+      <div class="listing-preview">
+        <div class="listing-emoji">${item.emoji || '📦'}</div>
+        <div class="listing-preview-info">
+          <div class="listing-preview-title">${item.title}</div>
+          <div class="listing-preview-price">R${parseFloat(item.price).toLocaleString()}</div>
+        </div>
+      </div>
+      <div class="listing-meta">
+        <span><i data-lucide="map-pin" width="14"></i> ${item.location || item.campus || 'DUT Campus'}</span>
+        <span class="condition-badge">${item.condition || 'Good'}</span>
+      </div>
+      <div class="listing-actions">
+        <button class="action-btn view">
+          <i data-lucide="eye"></i>
+          View
+        </button>
+        <button class="action-btn remove-saved">
+          <i data-lucide="heart-off"></i>
+          Remove
+        </button>
+      </div>
+    `;
+
+    card.querySelector('.listing-preview').addEventListener('click', () => {
+      window.location.href = `ListingDetails.html?id=${item.id}`;
+    });
+    card.querySelector('.view').addEventListener('click', () => {
+      window.location.href = `ListingDetails.html?id=${item.id}`;
+    });
+    card.querySelector('.remove-saved').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (confirm('Remove this item from saved?')) {
+        removeSavedItem(item.id);
+        renderSavedItems();
+        updateSavedCount();
+      }
+    });
+
+    grid.appendChild(card);
+  });
+
+  lucide.createIcons();
+}
+
+function updateSavedCount() {
+  document.getElementById('savedCount').textContent = getSavedItems().length;
+}
+
+// ================= TABS =================
+document.querySelectorAll('.tab-btn').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+    if (tab.dataset.tab === 'saved') renderSavedItems();
+  });
+});
+
+// ================= DELETE LISTING =================
+async function deleteListing(listingId, title) {
+  if (!confirm(`Are you sure you want to delete "${title}"?\n\nThis cannot be undone.`)) return;
+
+  try {
+    const { error } = await supabaseClient
+      .from('listings')
+      .delete()
+      .eq('id', listingId);
+
+    if (error) throw error;
+
+    alert('✅ Listing deleted successfully!');
+    fetchMyListings();
+  } catch (error) {
+    console.error('❌ Error deleting listing:', error);
+    alert('Sorry, there was an error. Please try again.');
+  }
+}
+
+// ================= SETTINGS =================
+document.querySelectorAll('.toggle-switch input').forEach(toggle => {
+  toggle.addEventListener('change', function () {
+    const settings = getSettings();
+    if (this.id === 'notifMessages')   settings.notifications.messages   = this.checked;
+    if (this.id === 'notifNewListings') settings.notifications.newListings = this.checked;
+    saveSettings(settings);
+  });
+});
+
+function exportMyData() {
+  const data = { savedItems: getSavedItems(), settings: getSettings(), exportDate: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `campusmarket-data-${Date.now()}.json`;
+  link.click();
+  alert('✅ Your data has been exported!');
+}
+
+function clearMyData() {
+  if (confirm('⚠️ This will clear all your saved items. Are you sure?')) {
+    clearAllSaved();
+    renderSavedItems();
+    updateSavedCount();
+    alert('✅ All saved items have been cleared.');
+  }
+}
+
+document.getElementById('clearSavedBtn').addEventListener('click', clearMyData);
+
+document.getElementById('settingsBtn').addEventListener('click', () => {
+  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector('[data-tab="settings"]').classList.add('active');
+  document.getElementById('settings-tab').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ================= INIT =================
+function loadSettings() {
+  const settings = getSettings();
+  document.getElementById('notifMessages').checked   = settings.notifications.messages;
+  document.getElementById('notifNewListings').checked = settings.notifications.newListings;
+}
+
+function initializeProfile() {
+  updateSavedCount();
+  loadSettings();
+  fetchMyListings();  // async - handles buyer vs seller view
+  renderSavedItems();
+}
+
+initializeProfile();
+</script>
+</body>
+</html>

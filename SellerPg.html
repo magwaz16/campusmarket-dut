@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Create Listing - CampusMarket DUT</title>
+<link rel="stylesheet" href="Seller.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<!-- DATABASE CONNECTION -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+
+<!-- HELPER SCRIPTS -->
+<script src="session-helper.js"></script>
+<script src="security-utils.js"></script>
+
+<!-- ICONS -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+<style>
+  /* ===== MODAL STYLES ===== */
+  .modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+    z-index: 2000; padding: 20px; backdrop-filter: blur(5px);
+  }
+  .modal.active { display: flex; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  .modal-content {
+    background: var(--bg-card); border-radius: 20px;
+    max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto;
+    border: 1px solid var(--border); box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    animation: modalSlideIn 0.3s ease-out; position: relative;
+  }
+  @keyframes modalSlideIn {
+    from { opacity:0; transform: translateY(30px) scale(0.95); }
+    to   { opacity:1; transform: translateY(0) scale(1); }
+  }
+  .modal-icon { text-align:center; margin: 30px 0 20px; font-size: 4rem; }
+  .modal-icon.success { color: var(--accent); }
+  .modal-icon.error   { color: #ef476f; }
+  .modal-icon.welcome { color: var(--primary); }
+  .modal-header { padding: 0 30px; text-align:center; margin-bottom: 20px; }
+  .modal-header h3 { font-size: 1.5rem; margin: 0; }
+  .modal-body { padding: 0 30px 30px; line-height: 1.6; color: var(--text-secondary); }
+  .modal-body p { margin-bottom: 16px; }
+  .modal-footer { padding: 20px 30px 30px; border-top: 1px solid var(--border); display:flex; justify-content:center; }
+  .welcome-modal .modal-content { max-width: 600px; }
+  .welcome-content { display:flex; gap:30px; align-items:center; padding: 30px 30px 0; }
+  .welcome-text h3 { margin-bottom:12px; color: var(--accent); font-size:1.3rem; }
+  .welcome-tips { background: rgba(6,214,160,0.1); border-radius:12px; padding:20px; margin: 20px 30px; }
+  .welcome-tips ul { list-style:none; padding:0; margin:0; }
+  .welcome-tips li { display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; color:var(--text-secondary); font-size:0.9rem; }
+  .welcome-tips li i { color:var(--accent); flex-shrink:0; margin-top:2px; }
+  .modal-close { position:absolute; top:16px; right:16px; background:none; border:none; color:var(--text-secondary); cursor:pointer; font-size:1.5rem; padding:4px; }
+  .modal-close:hover { color:var(--text-primary); }
+
+/* ===================== BTN STYLES =============== */
+/* ================= MODAL BUTTONS ================= */
+
+.btn-primary {
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+  /* ===== UPLOAD PROGRESS ===== */
+  .upload-progress-wrap {
+    margin: 12px 0;
+    display: none;
+  }
+  .upload-progress-wrap.active { display: block; }
+  .upload-progress-bar-bg {
+    background: var(--border);
+    border-radius: 99px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .upload-progress-bar {
+    height: 100%;
+    background: var(--primary-gradient);
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  .upload-progress-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    text-align: center;
+  }
+
+  /* ===== IMAGE PREVIEW GRID ===== */
+  .image-preview {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .preview-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid var(--border);
+  }
+  .preview-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .remove-image {
+    position: absolute; top: 4px; right: 4px;
+    background: rgba(0,0,0,0.7);
+    color: white; border: none; border-radius: 50%;
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px; font-weight: bold;
+    line-height: 1;
+  }
+  .remove-image:hover { background: #ef476f; }
+
+  .upload-counter {
+    position: absolute; top: 10px; right: 10px;
+    background: var(--accent); color: var(--bg-dark);
+    padding: 4px 8px; border-radius: 12px;
+    font-size: 0.8rem; font-weight: 600;
+  }
+  .image-upload { position: relative; }
+
+  /* ===== LISTING PREVIEW IMAGE ===== */
+  .preview-image-real {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  .preview-emoji-fallback {
+    font-size: 3rem;
+    text-align: center;
+    padding: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .form-navigation { flex-direction: column; gap: 12px; }
+    .nav-btn { width:100%; justify-content:center; padding:16px 20px; font-size:1rem; }
+    .welcome-content { flex-direction:column; text-align:center; gap:20px; }
+    .image-preview { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Welcome Modal -->
+<div id="welcomeModal" class="modal welcome-modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('welcomeModal')"><i data-lucide="x"></i></button>
+    <div class="welcome-content">
+      <div class="modal-icon welcome modal-logo">
+        <img src="/Imgs/CM_Logo_1.png" alt="CampusMarket Logo" class="logo-img">
+        <!-- <i data-lucide="store"></i> -->
+      </div>
+      <div class="welcome-text">
+        <h3>Welcome to CampusMarket Seller!</h3>
+        <p>Sell to verified DUT students safely. Follow these tips for best results:</p>
+      </div>
+    </div>
+    <div class="welcome-tips">
+      <ul>
+        <li><i data-lucide="camera"></i> <strong>Add photos:</strong> Listings with photos get 3x more messages</li>
+        <li><i data-lucide="map-pin"></i> <strong>Choose safe spots:</strong> Meet at campus libraries for high-value items</li>
+        <li><i data-lucide="shield"></i> <strong>Verification required:</strong> You'll need to verify with DUT student ID</li>
+        <li><i data-lucide="clock"></i> <strong>Quick process:</strong> Takes less than 2 minutes to list</li>
+      </ul>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal('welcomeModal')" class="btn-primary"><i data-lucide="check"></i> Start Listing</button>
+    </div>
+  </div>
+</div>
+
+<!-- Error Modal -->
+<div id="errorModal" class="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('errorModal')"><i data-lucide="x"></i></button>
+    <div class="modal-icon error"><i data-lucide="alert-circle"></i></div>
+    <div class="modal-header"><h3 id="errorTitle">Missing Information</h3></div>
+    <div class="modal-body"><p id="errorMessage">Please fill in all required fields.</p></div>
+    <div class="modal-footer"><button onclick="closeModal('errorModal')" class="btn-primary">OK</button></div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModalAndRedirect()"><i data-lucide="x"></i></button>
+    <div class="modal-icon success"><i data-lucide="check-circle"></i></div>
+    <div class="modal-header"><h3>Listing Created Successfully!</h3></div>
+    <div class="modal-body">
+      <p>Your listing is <strong>pending verification</strong>.</p>
+      <p>You will receive a WhatsApp message within 24 hours asking for your DUT student ID photo.</p>
+      <p>Once verified, your listing will go live and buyers can contact you.</p>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModalAndRedirect()" class="btn-primary"><i data-lucide="home"></i> Go to Homepage</button>
+    </div>
+  </div>
+</div>
+
+<!-- Terms Modal -->
+<div id="termsModal" class="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('termsModal')"><i data-lucide="x"></i></button>
+    <div class="modal-header"><h3>Terms & Safety Guidelines</h3></div>
+    <div class="modal-body">
+      <h4>Safety Guidelines</h4>
+      <ul>
+        <li>Always meet in public campus locations</li>
+        <li>Never share personal financial information</li>
+        <li>Inspect items before paying</li>
+        <li>Trust your instincts</li>
+      </ul>
+      <h4>Seller Responsibilities</h4>
+      <ul>
+        <li>Provide accurate descriptions and photos</li>
+        <li>Respond within 24 hours</li>
+        <li>Show up for agreed meetups</li>
+        <li>Remove listing when sold</li>
+      </ul>
+      <h4>Prohibited Items</h4>
+      <ul>
+        <li>Weapons, drugs, or illegal items</li>
+        <li>Stolen goods or counterfeit products</li>
+        <li>Items violating university policies</li>
+      </ul>
+    </div>
+    <div class="modal-footer"><button onclick="closeModal('termsModal')" class="btn-primary">I Understand</button></div>
+  </div>
+</div>
+
+<header>
+ <div class="logo">
+  <a href="index.html">
+    <img src="/Imgs/CM_Logo_1.png" alt="" class="logo-img">
+    </a>
+  <!--   <h1>CampusMarket DUT</h1> -->
+  </div>
+    <div class="user-info">
+    <i data-lucide="shield-check"></i><span>Verified Seller</span>
+  </div>
+</header>
+
+<main class="create-container">
+  <div class="create-header">
+    <h2>List Your Item or Service</h2>
+    <p>Create a listing in under 2 minutes. Choose safe campus meetup spots.</p>
+  </div>
+
+  <div class="form-steps">
+    <div class="step-indicator active" data-step="1"><div class="step-number">1</div><div class="step-label">Item Details</div></div>
+    <div class="step-indicator" data-step="2"><div class="step-number">2</div><div class="step-label">Price & Photos</div></div>
+    <div class="step-indicator" data-step="3"><div class="step-number">3</div><div class="step-label">Campus Meetup</div></div>
+    <div class="step-indicator" data-step="4"><div class="step-number">4</div><div class="step-label">Review & Post</div></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="form-section active" id="step1-section">
+    <div class="section-title"><i data-lucide="package"></i><span>What are you selling?</span></div>
+    <div class="form-group">
+      <label class="required">Category</label>
+      <div class="categories-grid">
+        <div class="category-option" data-category="tech"><div class="category-card"><div class="category-emoji">💻</div><div class="category-name">Tech & Gadgets</div><div class="category-desc">Laptops, phones, accessories</div></div></div>
+        <div class="category-option" data-category="merch"><div class="category-card"><div class="category-emoji">👕</div><div class="category-name">Merch & Accessories</div><div class="category-desc">Clothing, bags, DUT merch</div></div></div>
+        <div class="category-option" data-category="tutoring"><div class="category-card"><div class="category-emoji">📚</div><div class="category-name">Tutoring Services</div><div class="category-desc">Academic help, subject tutoring</div></div></div>
+        <div class="category-option" data-category="food"><div class="category-card"><div class="category-emoji">🍕</div><div class="category-name">Food & Supplies</div><div class="category-desc">Snacks, drinks, essentials</div></div></div>
+      </div>
+      <input type="hidden" id="category" value="">
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="required">Your Name</label>
+        <input type="text" class="form-input" id="sellerName" placeholder="e.g., Sarah K." maxlength="50">
+        <div class="form-hint">How buyers will see you</div>
+      </div>
+      <div class="form-group">
+        <label class="required">Your WhatsApp Number</label>
+        <input type="tel" class="form-input" id="sellerPhone" placeholder="0812345678" pattern="[0-9]{10}" maxlength="10">
+        <div class="form-hint">Buyers will contact you here</div>
+      </div>
+      <div class="form-group">
+        <label class="required">Condition</label>
+        <select class="form-select" id="condition">
+          <option value="">Select condition</option>
+          <option value="Brand New">✨ Brand New</option>
+          <option value="Like New">👍 Like New</option>
+          <option value="Good">✅ Good Condition</option>
+          <option value="Fair">⚠️ Fair / Used</option>
+          <option value="Needs Repair">🔧 Needs Repair</option>
+        </select>
+      </div>
+      <div class="form-group" id="subject-group" style="display:none;">
+        <label class="required">Subject/Service</label>
+        <input type="text" class="form-input" id="subject" placeholder="e.g., Engineering Math, Python Help">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="required">Title</label>
+      <input type="text" class="form-input" id="title" placeholder="e.g., MacBook Air 2020 or Engineering Math Tutoring" maxlength="60">
+      <div class="form-hint">Be specific - mention brand, model, or key details</div>
+    </div>
+    <div class="form-group">
+      <label class="required">Description</label>
+      <textarea class="form-textarea" id="description" placeholder="Describe your item or service in detail. Include condition, specifications, what's included, etc."></textarea>
+      <div class="form-hint">The more details, the faster it will sell!</div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Price & Photos -->
+  <div class="form-section" id="step2-section">
+    <div class="section-title"><i data-lucide="tag"></i><span>Pricing & Photos</span></div>
+    <div class="form-group">
+      <label class="required">Price</label>
+      <div class="price-container">
+        <span class="currency">R</span>
+        <input type="number" class="form-input price-input" id="price" placeholder="0.00" min="10" max="1000000" step="0.01">
+      </div>
+      <div id="priceHint" class="form-hint"></div>
+    </div>
+    <div class="form-group">
+      <label>Negotiable?</label>
+      <select class="form-select" id="negotiable">
+        <option value="yes">✅ Yes, price is negotiable</option>
+        <option value="no">❌ No, firm price</option>
+      </select>
+    </div>
+
+    <!-- ===== IMAGE UPLOAD SECTION ===== -->
+    <div class="form-group">
+      <label>Photos <span style="color:var(--accent)">(Recommended — replaces emoji!)</span></label>
+      <div class="image-upload" id="imageUpload">
+        <i data-lucide="camera"></i>
+        <p>Tap to upload photos</p>
+        <small>Up to 4 photos · JPG or PNG · Max 5MB each</small>
+      </div>
+      <input type="file" id="imageInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none">
+      <div class="image-preview" id="imagePreview"></div>
+
+      <!-- Progress bar shown during upload -->
+      <div class="upload-progress-wrap" id="uploadProgressWrap">
+        <div class="upload-progress-bar-bg">
+          <div class="upload-progress-bar" id="uploadProgressBar"></div>
+        </div>
+        <div class="upload-progress-label" id="uploadProgressLabel">Uploading photos...</div>
+      </div>
+
+      <div class="form-hint">📸 Listings with real photos get 3× more messages!</div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Campus Meetup -->
+  <div class="form-section" id="step3-section">
+    <div class="section-title"><i data-lucide="map-pin"></i><span>Campus Meetup Location</span></div>
+    <div class="safety-notice" id="safetyNotice">
+      <div class="safety-header"><i data-lucide="shield"></i><strong>Safety Guidelines</strong></div>
+      <div class="safety-tips" id="safetyTips"></div>
+    </div>
+    <div class="form-group campus-selector">
+      <label class="required">Choose Campus</label>
+      <div class="campus-options">
+        <button type="button" class="campus-btn active" data-campus="steve-biko">Steve Biko Campus</button>
+        <button type="button" class="campus-btn" data-campus="riston">Riston Campus</button>
+        <button type="button" class="campus-btn" data-campus="ml-sultan">ML Sultan Campus</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="required">Meetup Spot</label>
+      <div class="location-options" id="locationOptions"></div>
+      <div class="residence-warning" id="residenceWarning">
+        <div class="warning-header"><i data-lucide="alert-triangle"></i><strong>Residence Meetup Caution</strong></div>
+        <div class="warning-content">
+          <p>Meeting at residences carries more risk:</p>
+          <ul>
+            <li>Meet in common areas only</li>
+            <li>Bring a friend if possible</li>
+            <li>Daylight hours only</li>
+            <li>For high-value items, use library instead</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Review & Post -->
+  <div class="form-section" id="step4-section">
+    <div class="section-title"><i data-lucide="eye"></i><span>Review Your Listing</span></div>
+    <div class="category-badges">
+      <div id="categoryBadge" class="category-badge"></div>
+      <div class="category-badge safety"><i data-lucide="shield-check"></i><span>Safe Campus Meetup</span></div>
+    </div>
+    <div class="listing-preview" id="listingPreview">
+      <!-- Image or emoji preview rendered by updatePreview() -->
+      <div id="previewImageWrap"></div>
+      <div class="preview-details">
+        <div class="preview-title" id="previewTitle">Item Title</div>
+        <div class="preview-price" id="previewPrice">R --.--</div>
+        <div class="preview-meta">
+          <span id="previewCondition">Condition</span>
+          <span id="previewLocation">Location</span>
+        </div>
+        <div class="preview-description" id="previewDescription">Item description will appear here...</div>
+      </div>
+    </div>
+    <div class="verification-notice">
+      <div class="verification-header"><i data-lucide="shield-check"></i><strong>DUT Verification Required</strong></div>
+      <p>All listings require verification. After posting, you'll receive a WhatsApp message within 24 hours.</p>
+    </div>
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="agreeTerms">
+        <span>I agree to the <a href="#" onclick="showModal('termsModal'); return false;">Terms & Safety Guidelines</a></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="form-navigation">
+    <button class="nav-btn btn-back" id="btnBack"><i data-lucide="arrow-left"></i> Back</button>
+    <button class="nav-btn btn-next" id="btnNext">Next Step <i data-lucide="arrow-right"></i></button>
+    <button class="nav-btn btn-submit" id="btnSubmit"><i data-lucide="check"></i> Post Listing</button>
+  </div>
+</main>
+
+<script>
+lucide.createIcons();
+
+// ===== CONSTANTS =====
+const COOLDOWN_KEY  = 'last_listing_submit';
+const COOLDOWN_MS   = 5 * 60 * 1000;
+const BUCKET_NAME   = 'listing-images';
+
+// ===== SANITIZE =====
+function sanitizeHTML(str) {
+  if (!str) return '';
+  const t = document.createElement('div');
+  t.textContent = str;
+  return t.innerHTML;
+}
+function sanitizeInput(v) { return v ? String(v).trim() : ''; }
+
+// ===== DUT DATA =====
+const DUT_CAMPUSES = {
+  'steve-biko': { name:'Steve Biko Campus', locations:[
+    {id:'steve-biko-library',   name:'Steve Biko Library', emoji:'📚', desc:'Main entrance',      recommended:true},
+    {id:'steve-biko-courtyard', name:'Main Courtyard',     emoji:'🌳', desc:'Central outdoor area'},
+    {id:'steve-biko-residence', name:'Steve Biko Residence',emoji:'🏠',desc:'Common area only',   warning:true}
+  ]},
+  'riston': { name:'Riston Campus', locations:[
+    {id:'riston-hall',      name:'Riston Hall', emoji:'🏛️', desc:'Main hall entrance', recommended:true},
+    {id:'riston-cafeteria', name:'Cafeteria',   emoji:'🍽️', desc:'Food court area'},
+    {id:'riston-residence', name:'Riston Residence', emoji:'🏠', desc:'Common area only', warning:true}
+  ]},
+  'ml-sultan': { name:'ML Sultan Campus', locations:[
+    {id:'ml-sultan-library', name:'ML Sultan Library', emoji:'📚', desc:'Front steps', recommended:true},
+    {id:'ml-courtyard',      name:'ML Courtyard',      emoji:'🌿', desc:'Central courtyard', recommended:true},
+    {id:'ml-residence',      name:'ML Residence',      emoji:'🏠', desc:'Common area only', warning:true}
+  ]}
+};
+const SAFETY_RULES = {
+  tech:     {allowed:['steve-biko-library','ml-sultan-library','riston-hall'], tips:['Meet at campus libraries only','Test tech items together','Bring charger/cables for testing','Never meet at residences for tech items']},
+  merch:    {allowed:['steve-biko-library','ml-sultan-library','riston-hall','ml-courtyard','steve-biko-courtyard','riston-cafeteria'], tips:['Public campus spots recommended','Check item condition thoroughly']},
+  tutoring: {allowed:['steve-biko-library','ml-sultan-library'], tips:['Libraries are best for tutoring','Bring study materials','Agree on session length upfront']},
+  food:     {allowed:['steve-biko-library','ml-sultan-library','riston-hall','ml-courtyard','steve-biko-courtyard','riston-cafeteria','steve-biko-residence','riston-residence','ml-residence'], tips:['Residence meetups acceptable for food','Check expiry dates','Sealed packaging preferred']}
+};
+const PRICE_HINTS = {
+  tech:'💡 Tech items sell fast! Check similar items for pricing.',
+  merch:'👕 DUT merch holds value well. Price based on condition.',
+  tutoring:'📚 Standard rate: R150-R300/hour for DUT subjects.',
+  food:'🍕 Price competitively compared to campus shops.'
+};
+
+// ===== STATE =====
+let currentStep      = 1;
+let currentCategory  = '';
+let currentCampus    = 'steve-biko';
+let selectedLocation = '';
+let uploadedFiles    = [];   // raw File objects kept for upload at submit time
+let previewURLs      = [];   // local object URLs for instant preview
+
+// ===== MODALS =====
+function showModal(id) { document.getElementById(id)?.classList.add('active'); lucide.createIcons(); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
+function closeModalAndRedirect() { closeModal('successModal'); setTimeout(() => location.href = 'index.html', 300); }
+function showErrorModal(title, msg) {
+  document.getElementById('errorTitle').textContent   = title;
+  document.getElementById('errorMessage').textContent = msg;
+  showModal('errorModal');
+}
+
+// ===== SESSION LOAD =====
+document.addEventListener('DOMContentLoaded', async () => {
+  lucide.createIcons();
+  try {
+    const session = await loadSellerSession();
+    if (session) {
+      if (session.seller_name)  document.getElementById('sellerName').value  = session.seller_name;
+      if (session.seller_phone) document.getElementById('sellerPhone').value = session.seller_phone;
+      console.log('✅ Session auto-filled');
+    }
+  } catch (e) { console.warn('Session load failed:', e); }
+
+  setTimeout(() => showModal('welcomeModal'), 800);
+
+  // Load draft
+  const draft = JSON.parse(localStorage.getItem('campusMarketDraft') || '{}');
+  if (draft.category && Object.keys(draft).length > 0) {
+    setTimeout(() => {
+      if (confirm('Found a saved draft. Continue where you left off?')) {
+        applyDraft(draft);
+      } else {
+        localStorage.removeItem('campusMarketDraft');
+      }
+    }, 1000);
+  }
+});
+
+function applyDraft(draft) {
+  currentCategory = draft.category || '';
+  document.getElementById('category').value = currentCategory;
+  document.querySelector(`[data-category="${currentCategory}"]`)?.click();
+  if (draft.title)       document.getElementById('title').value       = draft.title;
+  if (draft.price)       document.getElementById('price').value       = draft.price;
+  if (draft.condition)   document.getElementById('condition').value   = draft.condition;
+  if (draft.description) document.getElementById('description').value = draft.description;
+  if (draft.subject)     document.getElementById('subject').value     = draft.subject;
+  if (draft.negotiable)  document.getElementById('negotiable').value  = draft.negotiable;
+  if (draft.campus) { currentCampus = draft.campus; document.querySelector(`[data-campus="${draft.campus}"]`)?.click(); }
+  if (draft.currentStep) setTimeout(() => updateStep(draft.currentStep), 100);
+}
+
+// ===== VALIDATION =====
+function validateStep(step) {
+  if (step === 1) {
+    const name = sanitizeInput(document.getElementById('sellerName').value);
+    if (!name || name.length < 2) { showErrorModal('Enter Your Name','Please enter your name (minimum 2 characters)'); return false; }
+    const phone = sanitizeInput(document.getElementById('sellerPhone').value);
+    if (!phone || !/^0[0-9]{9}$/.test(phone)) { showErrorModal('Invalid Phone','Please enter a valid 10-digit number starting with 0'); return false; }
+    if (!currentCategory) { showErrorModal('Select Category','Please choose a category'); return false; }
+    if (!document.getElementById('condition').value) { showErrorModal('Select Condition','Please select item condition'); return false; }
+    const title = sanitizeInput(document.getElementById('title').value);
+    if (!title || title.length < 5)  { showErrorModal('Enter Title','Minimum 5 characters'); return false; }
+    if (title.length > 60)           { showErrorModal('Title Too Long','Maximum 60 characters'); return false; }
+    const desc = sanitizeInput(document.getElementById('description').value);
+    if (!desc || desc.length < 10)   { showErrorModal('Enter Description','Minimum 10 characters'); return false; }
+    if (currentCategory === 'tutoring' && !document.getElementById('subject').value.trim()) { showErrorModal('Enter Subject','Please enter the tutoring subject'); return false; }
+    return true;
+  }
+  if (step === 2) {
+    const price = parseFloat(document.getElementById('price').value);
+    if (!price || isNaN(price))  { showErrorModal('Enter Price','Please enter a valid price'); return false; }
+    if (price < 10)              { showErrorModal('Price Too Low','Minimum price is R10'); return false; }
+    if (price > 1000000)         { showErrorModal('Price Too High','Maximum is R1,000,000'); return false; }
+    const dec = price.toString().split('.')[1];
+    if (dec && dec.length > 2)   { showErrorModal('Invalid Price','Max 2 decimal places'); return false; }
+    return true;
+  }
+  if (step === 3) {
+    if (!selectedLocation) { showErrorModal('Select Location','Please choose a meetup location'); return false; }
+    return true;
+  }
+  if (step === 4) {
+    if (!document.getElementById('agreeTerms').checked) { showErrorModal('Agree to Terms','Please agree to the terms'); return false; }
+    return true;
+  }
+  return true;
+}
+
+// ===== STEP NAVIGATION =====
+function updateStep(step) {
+  if (!validateStep(currentStep)) return false;
+  document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.step-indicator').forEach(i => i.classList.remove('active'));
+  document.getElementById(`step${step}-section`).classList.add('active');
+  document.querySelector(`[data-step="${step}"]`).classList.add('active');
+  document.getElementById('btnBack').style.display   = step > 1 ? 'flex' : 'none';
+  document.getElementById('btnNext').style.display   = step < 4 ? 'flex' : 'none';
+  document.getElementById('btnSubmit').style.display = step === 4 ? 'flex' : 'none';
+  if (step === 3) { updateLocationOptions(); updateSafetyNotice(); }
+  if (step === 4) { updatePreview(); }
+  currentStep = step;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  return true;
+}
+document.getElementById('btnNext').addEventListener('click', () => updateStep(currentStep + 1));
+document.getElementById('btnBack').addEventListener('click', () => updateStep(currentStep - 1));
+
+// ===== CATEGORY SELECTION =====
+document.querySelectorAll('.category-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.category-card').forEach(c => { c.style.borderColor='transparent'; c.style.background='rgba(99,102,241,0.1)'; });
+    opt.querySelector('.category-card').style.borderColor = 'var(--accent)';
+    opt.querySelector('.category-card').style.background  = 'rgba(6,214,160,0.15)';
+    currentCategory = opt.dataset.category;
+    document.getElementById('category').value = currentCategory;
+    const sg = document.getElementById('subject-group');
+    sg.style.display = currentCategory === 'tutoring' ? 'block' : 'none';
+    sg.querySelector('input').required = currentCategory === 'tutoring';
+    document.getElementById('priceHint').textContent = PRICE_HINTS[currentCategory] || '';
+    if (currentStep === 3) { updateLocationOptions(); updateSafetyNotice(); }
+  });
+});
+
+// ===== CAMPUS & LOCATION =====
+document.querySelectorAll('.campus-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.campus-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentCampus = btn.dataset.campus;
+    updateLocationOptions();
+  });
+});
+function updateLocationOptions() {
+  const container = document.getElementById('locationOptions');
+  const campus    = DUT_CAMPUSES[currentCampus];
+  const rule      = SAFETY_RULES[currentCategory];
+  if (!campus || !rule) return;
+  container.innerHTML = '';
+  campus.locations.forEach(loc => {
+    if (!rule.allowed.includes(loc.id)) return;
+    const el = document.createElement('div');
+    el.className     = `location-option ${loc.recommended ? 'recommended' : ''} ${loc.warning ? 'warning' : ''}`;
+    el.dataset.location = loc.id;
+    el.innerHTML = `<div class="location-icon">${loc.emoji}</div><div class="location-name">${sanitizeHTML(loc.name)}</div><div class="location-desc">${sanitizeHTML(loc.desc)}</div>`;
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.location-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedLocation = loc.id;
+      document.getElementById('residenceWarning').classList.toggle('active', loc.id.includes('residence'));
+    });
+    container.appendChild(el);
+  });
+  if (container.firstChild && !selectedLocation) container.firstChild.click();
+}
+function updateSafetyNotice() {
+  const rule   = SAFETY_RULES[currentCategory];
+  const notice = document.getElementById('safetyNotice');
+  const tips   = document.getElementById('safetyTips');
+  if (rule && currentCategory) {
+    notice.classList.add('active');
+    tips.innerHTML = `<p>For <strong>${currentCategory}</strong>:</p><ul>` + rule.tips.map(t => `<li>${sanitizeHTML(t)}</li>`).join('') + '</ul>';
+  } else {
+    notice.classList.remove('active');
+  }
+}
+
+// ===== IMAGE SELECTION (local preview only — upload happens on submit) =====
+document.getElementById('imageUpload').addEventListener('click', () => document.getElementById('imageInput').click());
+
+document.getElementById('imageInput').addEventListener('change', (e) => {
+  const incoming = Array.from(e.target.files);
+
+  if (uploadedFiles.length + incoming.length > 4) {
+    showErrorModal('Too Many Photos', 'Maximum 4 photos allowed. Remove some first.');
+    e.target.value = '';
+    return;
+  }
+
+  incoming.forEach(file => {
+    if (!file.type.match(/image\/(jpeg|png|webp)/)) {
+      showErrorModal('Wrong File Type', `${file.name} is not a JPG, PNG or WebP image.`);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showErrorModal('Photo Too Large', `${file.name} exceeds 5MB.`);
+      return;
+    }
+    uploadedFiles.push(file);
+    previewURLs.push(URL.createObjectURL(file));
+  });
+
+  e.target.value = ''; // reset so same file can be re-added if needed
+  renderImagePreviews();
+});
+
+function renderImagePreviews() {
+  const container  = document.getElementById('imagePreview');
+  const uploadArea = document.getElementById('imageUpload');
+  container.innerHTML = '';
+  uploadArea.querySelector('.upload-counter')?.remove();
+
+  if (uploadedFiles.length > 0) {
+    const counter = document.createElement('div');
+    counter.className   = 'upload-counter';
+    counter.textContent = `${uploadedFiles.length}/4 photos`;
+    uploadArea.appendChild(counter);
+  }
+
+  previewURLs.forEach((url, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'preview-item';
+    wrap.innerHTML = `<img src="${url}" alt="Photo ${i+1}"><button class="remove-image" data-index="${i}" title="Remove">×</button>`;
+    container.appendChild(wrap);
+  });
+
+  container.querySelectorAll('.remove-image').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.index);
+      URL.revokeObjectURL(previewURLs[idx]); // free memory
+      uploadedFiles.splice(idx, 1);
+      previewURLs.splice(idx, 1);
+      renderImagePreviews();
+    });
+  });
+}
+
+// ===== SUPABASE IMAGE UPLOAD (called at submit time) =====
+async function uploadImagesToSupabase(files, listingTitle) {
+  const urls = [];
+  const progressBar   = document.getElementById('uploadProgressBar');
+  const progressWrap  = document.getElementById('uploadProgressWrap');
+  const progressLabel = document.getElementById('uploadProgressLabel');
+
+  if (files.length === 0) return urls;
+
+  progressWrap.classList.add('active');
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    // Unique path: timestamp + random string + original extension
+    const ext      = file.name.split('.').pop().toLowerCase();
+    const safeName = listingTitle.replace(/[^a-z0-9]/gi, '_').substring(0, 30);
+    const path     = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}_${safeName}.${ext}`;
+
+    progressLabel.textContent = `Uploading photo ${i + 1} of ${files.length}...`;
+    progressBar.style.width   = `${Math.round((i / files.length) * 100)}%`;
+
+    const { data, error } = await supabaseClient.storage
+      .from(BUCKET_NAME)
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type
+      });
+
+    if (error) {
+      console.error(`❌ Failed to upload ${file.name}:`, error);
+      // Don't block the whole listing — just skip this image
+      continue;
+    }
+
+    // Get the public URL
+    const { data: urlData } = supabaseClient.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(path);
+
+    if (urlData?.publicUrl) {
+      urls.push(urlData.publicUrl);
+      console.log(`✅ Uploaded: ${urlData.publicUrl}`);
+    }
+  }
+
+  progressBar.style.width   = '100%';
+  progressLabel.textContent = `${urls.length} photo${urls.length !== 1 ? 's' : ''} uploaded!`;
+  setTimeout(() => progressWrap.classList.remove('active'), 1500);
+
+  return urls;
+}
+
+// ===== PREVIEW =====
+function updatePreview() {
+  const names  = {tech:'Tech & Gadgets', merch:'Merch & Accessories', tutoring:'Tutoring Services', food:'Food & Supplies'};
+  const emojis = {tech:'💻', merch:'👕', tutoring:'📚', food:'🍕'};
+  const badge  = document.getElementById('categoryBadge');
+  if (currentCategory) {
+    badge.innerHTML     = `<span>${emojis[currentCategory]}</span><span>${names[currentCategory]}</span>`;
+    badge.style.display = 'inline-flex';
+  }
+  document.getElementById('previewTitle').textContent     = sanitizeInput(document.getElementById('title').value) || 'Item Title';
+  const price = document.getElementById('price').value;
+  document.getElementById('previewPrice').textContent     = price ? `R${parseFloat(price).toFixed(2)}` : 'R --.--';
+  document.getElementById('previewCondition').textContent = document.getElementById('condition').value || 'Condition';
+  const locName = document.querySelector(`[data-location="${selectedLocation}"] .location-name`)?.textContent || 'Location';
+  document.getElementById('previewLocation').textContent  = `${DUT_CAMPUSES[currentCampus]?.name} - ${locName}`;
+  const desc = sanitizeInput(document.getElementById('description').value);
+  document.getElementById('previewDescription').textContent = desc.substring(0, 100) + (desc.length > 100 ? '...' : '');
+
+  // Show first local preview image or emoji
+  const wrap = document.getElementById('previewImageWrap');
+  if (previewURLs.length > 0) {
+    wrap.innerHTML = `<img src="${previewURLs[0]}" class="preview-image-real" alt="Listing photo">`;
+  } else {
+    wrap.innerHTML = `<div class="preview-emoji-fallback">${emojis[currentCategory] || '📦'}</div>`;
+  }
+}
+
+// ===== SUBMIT =====
+document.getElementById('btnSubmit').addEventListener('click', async () => {
+  if (!validateStep(4)) return;
+
+  const btn      = document.getElementById('btnSubmit');
+  const origHTML = btn.innerHTML;
+  btn.disabled   = true;
+  btn.innerHTML  = '<i data-lucide="loader"></i> Validating...';
+  lucide.createIcons();
+
+  try {
+    const sellerName  = document.getElementById('sellerName').value;
+    const sellerPhone = document.getElementById('sellerPhone').value;
+    const title       = document.getElementById('title').value;
+    const description = document.getElementById('description').value;
+    const price       = document.getElementById('price').value;
+
+// After successful submit, add visual feedback
+btn.innerHTML = '<i data-lucide="check-circle"></i> Success!';
+btn.style.background = 'var(--accent)';
+lucide.createIcons();
+
+setTimeout(() => {
+  showModal('successModal');
+}, 500);
+
+
+
+    // ===== NEW: SECURITY VALIDATION =====
+    const validation = validateListingData({
+      title,
+      description,
+      price,
+      seller_name: sellerName,
+      seller_phone: sellerPhone
+    });
+
+    if (!validation.valid) {
+      showErrorModal('Validation Failed', validation.errors.join('\n\n'));
+      btn.disabled  = false;
+      btn.innerHTML = origHTML;
+      lucide.createIcons();
+      return;
+    }
+
+    // Use sanitized data
+    const sanitizedData = validation.sanitizedData;
+
+    // Save session
+    await saveSellerSession(sanitizedData.seller_phone, sanitizedData.seller_name);
+
+    // Upload images
+    btn.innerHTML = '<i data-lucide="upload"></i> Uploading photos...';
+    lucide.createIcons();
+
+    const imageUrls = await uploadImagesToSupabase(uploadedFiles, sanitizedData.title);
+    console.log('📸 Image URLs:', imageUrls);
+
+    btn.innerHTML = '<i data-lucide="loader"></i> Saving listing...';
+    lucide.createIcons();
+
+    // Build listing data with SANITIZED values
+    const listingData = {
+      title:        sanitizedData.title,
+      description:  sanitizedData.description,
+      price:        parseFloat(sanitizedData.price),
+      condition:    document.getElementById('condition').value,
+      category:     currentCategory,
+      emoji:        getCategoryEmoji(currentCategory),
+      images:       imageUrls,
+      campus:       currentCampus,
+      location:     getLocationName(selectedLocation),
+      negotiable:   document.getElementById('negotiable').value === 'yes',
+      status:       'pending',
+      verified:     false,
+      seller_name:  sanitizedData.seller_name,
+      seller_phone: sanitizedData.seller_phone,
+      views:        0
+    };
+
+    // Duplicate check
+    const { data: existing } = await supabaseClient
+      .from('listings')
+      .select('id')
+      .eq('title', listingData.title)
+      .eq('seller_phone', listingData.seller_phone)
+      .gte('created_at', new Date(Date.now() - 86400000).toISOString());
+
+    if (existing?.length > 0) {
+      showErrorModal('Duplicate Listing', 'You submitted a very similar listing recently. Wait for verification first.');
+      btn.disabled  = false;
+      btn.innerHTML = origHTML;
+      lucide.createIcons();
+      return;
+    }
+
+    // Insert
+    const { data, error } = await supabaseClient.from('listings').insert([listingData]).select();
+    if (error) throw error;
+
+    console.log('✅ Listing saved:', data);
+    
+    // Record submission for rate limiting
+    recordSubmission();
+    
+    localStorage.removeItem('campusMarketDraft');
+    showModal('successModal');
+
+  } catch (err) {
+    console.error('❌ Error:', err);
+    showErrorModal('Error Creating Listing', 'Something went wrong. Please try again.\n\n' + (err.message || ''));
+    btn.disabled  = false;
+    btn.innerHTML = origHTML;
+    lucide.createIcons();
+  }
+});
+// ===== HELPERS =====
+function getCategoryEmoji(cat) { return {tech:'💻',merch:'👕',tutoring:'📚',food:'🍕'}[cat] || '📦'; }
+function getLocationName(id)   { return document.querySelector(`[data-location="${id}"] .location-name`)?.textContent || id; }
+
+// ===== AUTO-SAVE DRAFT =====
+function autoSaveDraft() {
+  localStorage.setItem('campusMarketDraft', JSON.stringify({
+    category: currentCategory, currentStep,
+    title:       document.getElementById('title').value,
+    price:       document.getElementById('price').value,
+    condition:   document.getElementById('condition').value,
+    description: document.getElementById('description').value,
+    subject:     document.getElementById('subject').value,
+    campus:      currentCampus, location: selectedLocation,
+    negotiable:  document.getElementById('negotiable').value
+  }));
+}
+document.querySelectorAll('input, textarea, select').forEach(el => {
+  el.addEventListener('input',  autoSaveDraft);
+  el.addEventListener('change', autoSaveDraft);
+});
+
+// ===== INIT =====
+updateStep(1);
+updateLocationOptions();
+</script>
+</body>
+</html>

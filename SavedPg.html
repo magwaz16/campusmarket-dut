@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Saved Items - CampusMarket DUT</title>
+<link rel="stylesheet" href="Profile.css"> <!-- Reuse your Profile.css -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<!-- =========== DATABASE CONNNECTION ========== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+
+<style>
+/* Additional styles specific to Saved page */
+:root {
+  --primary: #6366f1;
+  --primary-gradient: linear-gradient(135deg, #6366f1, #a855f7);
+  --accent: #06d6a0;
+  --bg-dark: #0f172a;
+  --bg-card: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border: #334155;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+
+
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding-bottom: 80px; /* Space for bottom nav */
+}
+
+/* ================= HEADER ================= */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.logo h1 {
+  font-weight: 800;
+  font-size: 1.5rem;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+/* ================= SAVED PAGE HEADER ================= */
+.saved-header {
+  padding: 24px 20px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(239, 71, 111, 0.1));
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.saved-header h1 {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.saved-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+/* ================= FILTER BAR ================= */
+.filter-bar {
+  display: flex;
+  padding: 16px 20px;
+  gap: 12px;
+  overflow-x: auto;
+  background: var(--bg-dark);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 73px; /* Header height */
+  z-index: 90;
+}
+
+.filter-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-btn:hover {
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.filter-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.filter-btn i {
+  font-size: 16px;
+}
+
+/* ================= SAVED ITEMS GRID ================= */
+.saved-container {
+  padding: 20px;
+}
+
+.saved-items-grid {
+  display: grid;
+ grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+ gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 600px) {
+  .saved-items-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.saved-item-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.saved-item-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--primary);
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2);
+}
+
+/* Status badges */
+.status-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  z-index: 2;
+}
+
+.status-available {
+  background: var(--accent);
+  color: #000;
+}
+
+.status-sold {
+  background: var(--text-secondary);
+  color: white;
+}
+
+.status-reserved {
+  background: var(--warning);
+  color: #000;
+}
+
+/* Item image/emoji */
+.item-image {
+  height: 180px;
+  background: linear-gradient(135deg, #334155, #475569);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  position: relative;
+}
+
+/* Remove save button */
+.remove-save-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(15, 23, 42, 0.8);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #ef476f;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.remove-save-btn:hover {
+  background: rgba(239, 71, 111, 0.2);
+  transform: scale(1.1);
+}
+
+/* Item details */
+.item-details {
+  padding: 20px;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.item-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.item-price {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meta-item i {
+  font-size: 14px;
+}
+
+/* Campus-specific colors */
+.campus-steve-biko {
+  color: #6366f1;
+}
+
+.campus-riston {
+  color: #06d6a0;
+}
+
+.campus-ml-sultan {
+  color: #f59e0b;
+}
+
+/* Category indicators */
+.category-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.category-tech {
+  background: rgba(99, 102, 241, 0.2);
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.category-merch {
+  background: rgba(239, 71, 111, 0.2);
+  color: #ef476f;
+  border: 1px solid rgba(239, 71, 111, 0.3);
+}
+
+.category-tutoring {
+  background: rgba(6, 214, 160, 0.2);
+  color: #06d6a0;
+  border: 1px solid rgba(6, 214, 160, 0.3);
+}
+
+.category-food {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Item actions */
+.item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.btn-primary {
+  flex: 2;
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  flex: 1;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+/* ================= EMPTY STATE ================= */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  max-width: 400px;
+  margin: 40px auto;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: 24px;
+  color: var(--text-secondary);
+  opacity: 0.3;
+}
+
+.empty-state h2 {
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.explore-btn {
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+}
+
+.explore-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+}
+
+/* ================= BOTTOM NAV ================= */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: rgba(2, 6, 23, 0.95);
+  backdrop-filter: blur(20px);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 12px 0;
+  z-index: 200;
+  border-top: 1px solid var(--border);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+  padding: 4px 8px;
+}
+
+.nav-item:hover, .nav-item.active {
+  color: white;
+  transform: translateY(-2px);
+}
+
+.nav-item i {
+  font-size: 20px;
+}
+
+.sell-btn-nav {
+  position: relative;
+  top: -10px;
+  background: var(--primary-gradient);
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+}
+
+.sell-btn-nav:hover {
+  transform: scale(1.1);
+  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.7);
+}
+
+/* ================= MODALS ================= */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 400px;
+  overflow: hidden;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.modal-header h3 {
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+}
+
+.modal-body {
+  padding: 24px;
+  text-align: center;
+}
+
+.modal-body i {
+  font-size: 3rem;
+  color: #ef476f;
+  margin-bottom: 16px;
+}
+
+.modal-footer {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+}
+
+.btn-cancel {
+  flex: 1;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-confirm {
+  flex: 1;
+  background: #ef476f;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-confirm:hover {
+  background: #d43d63;
+}
+/* ============== MOBILE RESPONSIVENESS ======= */
+
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+
+    .saved-header {
+    font-size: 1.4rem;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+  }
+
+  h3 {
+    font-size: 1rem;
+  }
+
+ 
+
+  .saved-container {
+    padding: 10px;
+  }
+
+  .item-details {
+    padding: 12px;
+  }
+
+  .item-title {
+    font-size: 0.95rem;
+  }
+
+  .item-price {
+    font-size: 1.1rem;
+  }
+
+  .item-meta {
+    gap: 6px;
+    font-size: 0.75rem;
+  }
+
+    .btn-primary,
+  .btn-secondary {
+    padding: 8px;
+    font-size: 0.8rem;
+  }
+
+  .item-actions {
+    gap: 6px;
+  }
+    .filter-bar {
+    padding: 10px 12px;
+  }
+
+  .filter-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+}
+
+
+
+
+</style>
+</head>
+
+<body>
+
+<header>
+ <div class="logo">
+    <img src="/Imgs/CM_Logo_1.png" alt="" class="logo-img">
+
+  <!--   <h1>CampusMarket DUT</h1> -->
+  </div>
+  <div class="header-actions">
+    <button class="action-btn" onclick="window.location.href='Profile.html'">
+      <i data-lucide="user"></i>
+      <span>Profile</span>
+    </button>
+  </div>
+</header>
+
+<!-- Saved Page Header -->
+<section class="saved-header">
+  <h1>
+    <i data-lucide="heart" width="32" height="32"></i>
+    Saved Items
+  </h1>
+  <p class="saved-subtitle">Items you're interested in from DUT students</p>
+</section>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+  <button class="filter-btn active" data-filter="all">
+    <i data-lucide="grid"></i>
+    All Items
+  </button>
+  <button class="filter-btn" data-filter="tech">
+    <i data-lucide="cpu"></i>
+    Tech & Gadgets
+  </button>
+  <button class="filter-btn" data-filter="merch">
+    <i data-lucide="shirt"></i>
+    Merch & Accessories
+  </button>
+  <button class="filter-btn" data-filter="tutoring">
+    <i data-lucide="graduation-cap"></i>
+    Tutoring
+  </button>
+  <button class="filter-btn" data-filter="food">
+    <i data-lucide="utensils"></i>
+    Food & Supplies
+  </button>
+</div>
+
+<!-- Saved Items Container -->
+<div class="saved-container">
+  <div class="saved-items-grid" id="savedItemsGrid">
+    <!-- Saved items will be dynamically generated -->
+  </div>
+  
+  <!-- Empty State (hidden when items exist) -->
+  <div class="empty-state" id="emptyState" style="display: none;">
+    <div class="empty-state-icon">
+      <i data-lucide="heart"></i>
+    </div>
+    <h2>No saved items yet</h2>
+    <p>When browsing listings, tap the heart icon to save items you're interested in. They'll appear here for easy access.</p>
+    <button class="explore-btn" onclick="window.location.href='Categorypg.html'">
+      <i data-lucide="compass"></i>
+      Browse Listings
+    </button>
+  </div>
+</div>
+
+<!-- Remove Confirmation Modal -->
+<div class="modal" id="removeModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Remove from Saved</h3>
+    </div>
+    <div class="modal-body">
+      <i data-lucide="heart-off"></i>
+      <p>Remove "<span id="removeItemTitle"></span>" from your saved items?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="cancelRemove">Cancel</button>
+      <button class="btn-confirm" id="confirmRemove">Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <a href="index.html" class="nav-item">
+    <i data-lucide="home"></i>
+    <span>Home</span>
+  </a>
+  
+  <a href="Categorypg.html" class="nav-item">
+    <i data-lucide="compass"></i>
+    <span>Browse</span>
+  </a>
+  
+  <button class="sell-btn-nav" onclick="window.location.href='SellerPg.html'">
+    <i data-lucide="plus"></i>
+  </button>
+  
+  <a href="SavedPg.html" class="nav-item active">
+    <i data-lucide="heart"></i>
+    <span>Saved</span>
+  </a>
+  
+  <a href="Profile.html" class="nav-item">
+    <i data-lucide="user"></i>
+    <span>Profile</span>
+  </a>
+</nav>
+
+<script>
+// ================= DATABASE CONNECTION =================
+// ADD THIS SCRIPT TAG TO <head> IF MISSING:
+// 
+
+// ================= SHARED STORAGE MODULE =================
+const STORAGE_KEY = 'campusmarket_saved_items';
+
+function getSavedItems() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch (error) {
+    console.error('Error reading saved items:', error);
+    return [];
+  }
+}
+
+function setSavedItems(items) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    return true;
+  } catch (error) {
+    console.error('Error saving items:', error);
+    return false;
+  }
+}
+
+function removeSavedItem(itemId) {
+  const items = getSavedItems();
+  const filtered = items.filter(i => i.id !== itemId);
+  setSavedItems(filtered);
+  return true;
+}
+
+// ================= LUCIDE ICONS =================
+lucide.createIcons();
+
+// ================= FETCH FULL LISTING DATA FROM SUPABASE =================
+async function fetchFullListingData(savedItems) {
+  if (savedItems.length === 0) return [];
+  
+  try {
+    const ids = savedItems.map(item => item.id);
+    
+    console.log('📡 Fetching full data for saved items:', ids);
+    
+    const { data, error } = await supabaseClient
+      .from('listings')
+      .select('*')
+      .in('id', ids);
+    
+    if (error) throw error;
+    
+    console.log('✅ Fetched full listing data:', data);
+    
+    // Merge with saved items to preserve save date, etc.
+    return savedItems.map(savedItem => {
+      const fullData = data.find(d => d.id === savedItem.id);
+      return fullData ? { ...savedItem, ...fullData } : savedItem;
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching full listing data:', error);
+    // Fallback to localStorage data if fetch fails
+    return savedItems;
+  }
+}
+
+// ================= RENDER SAVED ITEMS =================
+async function renderSavedItems(filter = 'all') {
+  const grid = document.getElementById('savedItemsGrid');
+  const emptyState = document.getElementById('emptyState');
+  
+  // Get saved item IDs from localStorage
+  let savedItems = getSavedItems();
+  
+  // Fetch full data from Supabase (including images)
+  let items = await fetchFullListingData(savedItems);
+  
+  // Apply filter
+  if (filter !== 'all') {
+    items = items.filter(item => item.category === filter);
+  }
+  
+  // Show/hide empty state
+  if (items.length === 0) {
+    grid.style.display = 'none';
+    emptyState.style.display = 'block';
+    return;
+  } else {
+    grid.style.display = 'grid';
+    emptyState.style.display = 'none';
+  }
+  
+  // Clear grid
+  grid.innerHTML = '';
+  
+  // Render each item
+  items.forEach(item => {
+    const card = createSavedItemCard(item);
+    grid.appendChild(card);
+  });
+  
+  // Reinitialize icons
+  setTimeout(() => lucide.createIcons(), 100);
+}
+
+// ================= GET CARD THUMBNAIL HTML =================
+function getCardThumbnailHTML(listing) {
+  if (listing.images && listing.images.length > 0) {
+    return `<img
+      src="${listing.images[0]}"
+      alt="${listing.title}"
+      style="width:100%; height:100%; object-fit:cover;"
+      onerror="this.outerHTML='<div style=\\'width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:4rem;\\'>${listing.emoji || '📦'}</div>'"
+    >`;
+  }
+  return `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:4rem;">${listing.emoji || '📦'}</div>`;
+}
+
+// ================= CREATE SAVED ITEM CARD =================
+function createSavedItemCard(item) {
+  const card = document.createElement('div');
+  card.className = 'saved-item-card';
+  card.dataset.id = item.id;
+  card.dataset.category = item.category;
+  
+  // Format date
+  const date = item.created_at ? new Date(item.created_at) : new Date(item.postedDate);
+  const formattedDate = date.toLocaleDateString('en-ZA', {
+    day: 'numeric',
+    month: 'short'
+  });
+  
+  // Status badge
+  let statusClass = 'status-available';
+  let statusText = 'Available';
+  if (item.status === 'sold') {
+    statusClass = 'status-sold';
+    statusText = 'Sold';
+  } else if (item.status === 'reserved' || item.status === 'pending') {
+    statusClass = 'status-reserved';
+    statusText = item.status === 'pending' ? 'Pending' : 'Reserved';
+  }
+  
+  // Category tag
+  let categoryClass = 'category-tech';
+  let categoryText = 'Tech';
+  if (item.category === 'merch') {
+    categoryClass = 'category-merch';
+    categoryText = 'Merch';
+  } else if (item.category === 'tutoring') {
+    categoryClass = 'category-tutoring';
+    categoryText = 'Tutoring';
+  } else if (item.category === 'food') {
+    categoryClass = 'category-food';
+    categoryText = 'Food';
+  }
+  
+  // Campus color
+  let campusColorClass = 'campus-steve-biko';
+  if (item.campus === 'riston') campusColorClass = 'campus-riston';
+  if (item.campus === 'ml-sultan') campusColorClass = 'campus-ml-sultan';
+  
+  const sellerName = item.seller_name || item.sellerName || 'DUT Student';
+  const location = item.location || item.campus || 'DUT Campus';
+  const description = item.description || 'No description provided.';
+  
+  card.innerHTML = `
+    <div class="status-badge ${statusClass}">${statusText}</div>
+    
+    <div class="item-image">
+      ${getCardThumbnailHTML(item)}
+      <button class="remove-save-btn" data-id="${item.id}" title="Remove from saved">
+        <i data-lucide="heart-off"></i>
+      </button>
+    </div>
+    
+    <div class="item-details">
+      <div class="item-header">
+        <div style="flex: 1;">
+          <div class="${categoryClass} category-tag">${categoryText}</div>
+          <h3 class="item-title">${item.title}</h3>
+        </div>
+        <div class="item-price">R${parseFloat(item.price).toLocaleString()}</div>
+      </div>
+      
+      <div class="item-meta">
+        <span class="meta-item">
+          <i data-lucide="map-pin"></i>
+          <span class="${campusColorClass}">${location}</span>
+        </span>
+        <span class="meta-item">
+          <i data-lucide="user"></i>
+          <span>${sellerName}</span>
+        </span>
+        <span class="meta-item">
+          <i data-lucide="calendar"></i>
+          <span>${formattedDate}</span>
+        </span>
+      </div>
+      
+      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+        ${description}
+      </p>
+      
+      <div style="background: rgba(245, 158, 11, 0.1); padding: 8px 12px; border-radius: 8px; margin-bottom: 16px; border-left: 3px solid var(--warning);">
+        <div style="display: flex; align-items: flex-start; gap: 6px; font-size: 0.85rem; color: var(--warning);">
+          <i data-lucide="shield-alert" width="14" height="14"></i>
+          <span>Meet on campus for safety</span>
+        </div>
+      </div>
+      
+      <div class="item-actions">
+        <button class="btn-secondary" onclick="viewItemDetails(${item.id})">
+          <i data-lucide="eye"></i>
+          View
+        </button>
+        <button class="btn-primary" onclick="contactSeller(${item.id}, '${item.seller_phone || ''}', '${item.title.replace(/'/g, "\\'")}')">
+          <i data-lucide="message-square"></i>
+          Contact
+        </button>
+      </div>
+    </div>
+  `;
+  
+  // Add click event to view item details
+  const imageDiv = card.querySelector('.item-image');
+  imageDiv.style.cursor = 'pointer';
+  imageDiv.addEventListener('click', (e) => {
+    if (!e.target.closest('.remove-save-btn')) {
+      viewItemDetails(item.id);
+    }
+  });
+  
+  card.querySelector('.item-header').style.cursor = 'pointer';
+  card.querySelector('.item-header').addEventListener('click', () => {
+    viewItemDetails(item.id);
+  });
+  
+  // Add remove button event
+  const removeBtn = card.querySelector('.remove-save-btn');
+  removeBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showRemoveModal(item.id, item.title);
+  });
+  
+  return card;
+}
+
+// ================= FILTER FUNCTIONALITY =================
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    const filter = btn.dataset.filter;
+    renderSavedItems(filter);
+  });
+});
+
+// ================= MODAL FUNCTIONALITY =================
+let itemToRemove = null;
+
+function showRemoveModal(itemId, itemTitle) {
+  itemToRemove = itemId;
+  document.getElementById('removeItemTitle').textContent = itemTitle;
+  document.getElementById('removeModal').style.display = 'flex';
+}
+
+function hideRemoveModal() {
+  itemToRemove = null;
+  document.getElementById('removeModal').style.display = 'none';
+}
+
+document.getElementById('cancelRemove').addEventListener('click', hideRemoveModal);
+document.getElementById('confirmRemove').addEventListener('click', () => {
+  if (itemToRemove) {
+    removeSavedItem(itemToRemove);
+    const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+    renderSavedItems(activeFilter);
+    showNotification('Item removed from saved', 'info');
+    hideRemoveModal();
+  }
+});
+
+document.getElementById('removeModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('removeModal')) {
+    hideRemoveModal();
+  }
+});
+
+// ================= ACTION FUNCTIONS =================
+function viewItemDetails(itemId) {
+  window.location.href = `ListingDetails.html?id=${itemId}`;
+}
+
+function contactSeller(itemId, phone, title) {
+  if (phone) {
+    const message = `Hi! I saw your listing "${title}" on CampusMarket DUT and I'm interested. Is it still available?`;
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  } else {
+    showNotification('Seller contact info not available', 'info');
+  }
+}
+
+// ================= NOTIFICATION SYSTEM =================
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  notification.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <i data-lucide="${type === 'info' ? 'info' : 'check'}"></i>
+      <span>${message}</span>
+    </div>
+  `;
+  
+  Object.assign(notification.style, {
+    position: 'fixed',
+    top: '100px',
+    right: '20px',
+    background: 'var(--bg-card)',
+    color: 'var(--text-primary)',
+    padding: '12px 20px',
+    borderRadius: '12px',
+    border: '1px solid var(--border)',
+    boxShadow: '0 8px 25px rgba(0, 0, 0, 0.3)',
+    zIndex: '1000',
+    maxWidth: '300px',
+    animation: 'slideIn 0.3s ease'
+  });
+  
+  document.body.appendChild(notification);
+  lucide.createIcons();
+  
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+// Add animation styles
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
+`;
+document.head.appendChild(style);
+
+// ================= INITIALIZATION =================
+function initializeSavedPage() {
+  renderSavedItems();
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  const filter = urlParams.get('filter');
+  if (filter) {
+    const filterBtn = document.querySelector(`[data-filter="${filter}"]`);
+    if (filterBtn) {
+      filterBtn.click();
+    }
+  }
+  
+  if (urlParams.get('saved') === 'true') {
+    showNotification('Item saved successfully!', 'info');
+    const newUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, newUrl);
+  }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initializeSavedPage);
+</script>
+</body>
+</html>
