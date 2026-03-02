@@ -443,16 +443,20 @@ function renderFeaturedListings(listings) {
       e.stopPropagation();
       const phone = btn.dataset.phone;
       const title = btn.dataset.title;
-      const message = `Hi! I'm interested in your "${title}" on CampusMarket DUT. Is it still available?`;
-      
-      if (phone) {
-        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
-      } else {
-        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-      }
-    });
-  });
-}
+      // Convert South African number to international format for WhatsApp
+        let whatsappPhone = listing.seller_phone.toString().trim();
+// If starts with 0, replace with 27 (SA country code)
+        if (whatsappPhone.startsWith('0')) {
+        whatsappPhone = '27' + whatsappPhone.substring(1);
+        }
+// Remove any spaces or special characters
+          whatsappPhone = whatsappPhone.replace(/[\s\-\(\)]/g, '');
+
+          const message = `Hi! I'm interested in your "${sanitizeHTML(listing.title)}" on CampusMarket DUT. Is it still available?`;
+            window.open(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`, '_blank');
+            });
+          });
+        }
 
 // ================= INITIALIZATION =================
 lucide.createIcons();
@@ -487,3 +491,4 @@ document.head.appendChild(style);
 </body>
 
 </html>
+
