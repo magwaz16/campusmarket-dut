@@ -41,10 +41,7 @@
 
 <header>
   <div class="logo">
-    <a href="index.html">
-    <img src="Imgs/CM_Logo_1.png" alt="" class="logo-img">
-    </a>
-  <!--   <h1>CampusMarket DUT</h1> -->
+    <img src="Imgs/CM_Logo_1.png" alt="CampusMarket DUT Logo" class="logo-img">
   </div>
   <div class="verified-badge">
     <i data-lucide="shield-check"></i>
@@ -54,10 +51,9 @@
 
 <section class="hero">
   <div class="hero-bg">
-    <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80" alt="Students on campus" class="active">
+    <img src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=1200&q=80" class="active">
     <img src="https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1200&q=80">
-    <img src="https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?auto=format&fit=crop&w=1200&q=80" alt="University library">
-     <img src="https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1200&q=80" alt="Students studying">
+    <img src="https://images.unsplash.com/photo-1524178234883-043d5c3f3cf4?auto=format&fit=crop&w=1200&q=80">
   </div>
 
   <div class="hero-content">
@@ -215,8 +211,8 @@
       <a class="btn-primary" href="SellerPg.html">
         <i data-lucide="plus-circle"></i>
         Create Listing
-      </a><a class="btn-secondary" href="learn-more.html">
-     <!--  <a class="btn-secondary" href="#" onclick="document.querySelector('.how-it-works').scrollIntoView({behavior:'smooth'}); return false;"> -->
+      </a>
+      <a class="btn-secondary" href="learn-more.html">
         <i data-lucide="info"></i>
         Learn More
       </a>
@@ -224,7 +220,7 @@
   </div>
 </section>
 
-<!-- Add this near the bottom of index.html, before footer -->
+<!-- Disclaimer -->
 <section style="max-width: 900px; margin: 40px auto; padding: 20px; background: rgba(239, 71, 111, 0.05); border-radius: 16px; border: 1px solid rgba(239, 71, 111, 0.2);">
   <h3 style="color: #ef476f; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
     <i data-lucide="alert-triangle"></i>
@@ -240,9 +236,7 @@
   </p>
 </section>
 
-
-<section>
-  <!-- Add before closing tag -->
+<!-- Footer -->
 <footer style="text-align: center; padding: 40px 20px; border-top: 1px solid var(--border); margin-top: 60px;">
   <p style="color: var(--text-secondary); margin-bottom: 12px;">
     © 2026 CampusMarket DUT - Student Marketplace
@@ -250,10 +244,10 @@
   <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
     <a href="terms.html" style="color: var(--accent); text-decoration: none;">Terms of Service</a>
     <a href="privacy.html" style="color: var(--accent); text-decoration: none;">Privacy Policy</a>
+    <a href="learn-more.html" style="color: var(--accent); text-decoration: none;">How It Works</a>
     <a href="mailto:magwaz08@gmail.com" style="color: var(--accent); text-decoration: none;">Contact</a>
   </div>
 </footer>
-</section>
 
 <nav class="bottom-nav">
   <a href="index.html" class="nav-item active">
@@ -299,7 +293,9 @@ async function fetchCategoryCounts() {
       const { count, error } = await supabaseClient
         .from('listings')
         .select('*', { count: 'exact', head: true })
-        .eq('category', category);
+        .eq('category', category)
+        .eq('status', 'active')
+        .eq('verified', true);
       
       if (!error && count !== null) {
         const element = document.getElementById(`${category}Count`);
@@ -320,8 +316,7 @@ async function fetchCategoryCounts() {
 
 // ================= FEATURED LISTINGS =================
 
-
-//====== ADDITIONAL CODE FOR THUMBNAIL =======
+// ====== ADDITIONAL CODE FOR THUMBNAIL =======
 function getCardThumbnailHTML(listing) {
   if (listing.images && listing.images.length > 0) {
     return `<img
@@ -334,7 +329,6 @@ function getCardThumbnailHTML(listing) {
   return `<div class="listing-emoji-wrap">${listing.emoji || '📦'}</div>`;
 }
 
-
 async function fetchFeaturedListings() {
   const container = document.getElementById('featuredListingsGrid');
   
@@ -342,13 +336,14 @@ async function fetchFeaturedListings() {
     console.log('📡 Fetching featured listings...');
     
     // Get most recent listings across all categories
-const { data, error } = await supabaseClient
-  .from('listings')
-  .select('*')
-  .eq('status', 'active')        // ← ADD THIS
-  .eq('verified', true)          // ← ADD THIS
-  .order('created_at', { ascending: false })
-  .limit(8);
+    const { data, error } = await supabaseClient
+      .from('listings')
+      .select('*')
+      .eq('status', 'active')
+      .eq('verified', true)
+      .order('created_at', { ascending: false })
+      .limit(8);
+      
     if (error) throw error;
     
     console.log('✅ Fetched featured listings:', data);
@@ -406,22 +401,19 @@ function renderFeaturedListings(listings) {
     const emoji = listing.emoji || emojiMap[listing.category] || '📦';
     
     card.innerHTML = `
-  <div class="listing-image">
-    ${getCardThumbnailHTML(listing)}
-  </div>
+      <div class="listing-image">
+        ${getCardThumbnailHTML(listing)}
+      </div>
       <div class="listing-details">
         <div class="listing-title">${sanitizeHTML(listing.title)}</div>
         <div class="listing-price">R${parseFloat(listing.price).toLocaleString()}</div>
         <div class="listing-meta">
           <span><i data-lucide="map-pin" width="14"></i> ${sanitizeHTML(listing.location || listing.campus)}</span>
-        </div>
-
-         <button class="whatsapp-btn" 
-            data-phone="${listing.seller_phone || ''}"
-            data-title="${sanitizeHTML(listing.title)}">
+          <button class="whatsapp-btn" data-phone="${listing.seller_phone || ''}" data-title="${sanitizeHTML(listing.title)}">
             <i data-lucide="message-circle" width="14"></i>
             Chat
           </button>
+        </div>
       </div>
     `;
     
@@ -437,26 +429,35 @@ function renderFeaturedListings(listings) {
   
   lucide.createIcons();
   
-  // Add WhatsApp handlers
+  // Add WhatsApp handlers with FIXED phone conversion
   document.querySelectorAll('.whatsapp-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const phone = btn.dataset.phone;
       const title = btn.dataset.title;
-      // Convert South African number to international format for WhatsApp
-        let whatsappPhone = listing.seller_phone.toString().trim();
-// If starts with 0, replace with 27 (SA country code)
-        if (whatsappPhone.startsWith('0')) {
+      
+      // ✅ FIXED: Convert South African number to international format
+      let whatsappPhone = phone.toString().trim();
+      
+      // If starts with 0, replace with 27 (SA country code)
+      if (whatsappPhone.startsWith('0')) {
         whatsappPhone = '27' + whatsappPhone.substring(1);
-        }
-// Remove any spaces or special characters
-          whatsappPhone = whatsappPhone.replace(/[\s\-\(\)]/g, '');
-
-          const message = `Hi! I'm interested in your "${sanitizeHTML(listing.title)}" on CampusMarket DUT. Is it still available?`;
-            window.open(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`, '_blank');
-            });
-          });
-        }
+      }
+      
+      // Remove any spaces or special characters
+      whatsappPhone = whatsappPhone.replace(/[\s\-\(\)]/g, '');
+      
+      const message = `Hi! I'm interested in your "${title}" on CampusMarket DUT. Is it still available?`;
+      
+      if (whatsappPhone) {
+        console.log('📱 Opening WhatsApp with number:', whatsappPhone);
+        window.open(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`, '_blank');
+      } else {
+        alert('Phone number not available');
+      }
+    });
+  });
+}
 
 // ================= INITIALIZATION =================
 lucide.createIcons();
@@ -489,6 +490,4 @@ document.head.appendChild(style);
 </script>
 
 </body>
-
 </html>
-
