@@ -4,21 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Panel - CampusMarket DUT</title>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
 <script src="supabase-config.js"></script>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
 <style>
 :root {
   --primary: #6366f1;
   --accent: #06d6a0;
+  --danger: #ef476f;
   --bg-dark: #0f172a;
   --bg-card: #1e293b;
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
   --border: #334155;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -27,24 +26,25 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--bg-dark);
   color: var(--text-primary);
-  min-height: 100vh;
-}
-
-.admin-container {
-  max-width: 1400px;
-  margin: 0 auto;
+  line-height: 1.6;
   padding: 20px;
 }
 
-header {
+.login-container {
+  max-width: 400px;
+  margin: 100px auto;
   background: var(--bg-card);
-  padding: 20px;
+  padding: 40px;
   border-radius: 16px;
-  margin-bottom: 30px;
   border: 1px solid var(--border);
 }
 
-h1 {
+.login-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.login-header h1 {
   font-size: 2rem;
   margin-bottom: 8px;
   background: linear-gradient(135deg, var(--primary), var(--accent));
@@ -52,11 +52,120 @@ h1 {
   -webkit-text-fill-color: transparent;
 }
 
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.btn-login {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+}
+
+.dashboard {
+  display: none;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard.active {
+  display: block;
+}
+
+.admin-header {
+  background: var(--bg-card);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.admin-title h1 {
+  font-size: 1.8rem;
+  margin-bottom: 4px;
+}
+
+.admin-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.refresh-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-refresh {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-refresh:hover {
+  transform: translateY(-2px);
+}
+
+.btn-toggle {
+  padding: 10px 20px;
+  background: var(--bg-dark);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .stat-card {
@@ -67,7 +176,7 @@ h1 {
 }
 
 .stat-value {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   margin-bottom: 4px;
 }
@@ -77,39 +186,33 @@ h1 {
   font-size: 0.9rem;
 }
 
-.stat-pending { color: var(--warning); }
-.stat-active { color: var(--success); }
-.stat-sold { color: var(--text-secondary); }
-
 .filters {
+  background: var(--bg-card);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
   display: flex;
   gap: 12px;
-  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
 .filter-btn {
-  background: var(--bg-card);
+  padding: 8px 16px;
+  background: var(--bg-dark);
   border: 1px solid var(--border);
-  color: var(--text-secondary);
-  padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: 20px;
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.filter-btn:hover {
-  border-color: var(--primary);
-  color: var(--text-primary);
-}
-
 .filter-btn.active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: white;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-dark);
 }
 
-.listings-grid {
+.listings-container {
   display: grid;
   gap: 16px;
 }
@@ -120,33 +223,40 @@ h1 {
   border-radius: 12px;
   padding: 20px;
   display: grid;
-  grid-template-columns: 100px 1fr auto;
+  grid-template-columns: 80px 1fr auto;
   gap: 20px;
   align-items: start;
 }
 
 .listing-image {
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   border-radius: 8px;
-  object-fit: cover;
   background: rgba(99,102,241,0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2.5rem;
+  overflow: hidden;
+}
+
+.listing-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 .listing-info h3 {
-  font-size: 1.2rem;
   margin-bottom: 8px;
+  font-size: 1.1rem;
 }
 
 .listing-meta {
   display: flex;
-  flex-wrap: wrap;
   gap: 16px;
-  margin-bottom: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
   font-size: 0.9rem;
   color: var(--text-secondary);
 }
@@ -157,81 +267,71 @@ h1 {
   gap: 4px;
 }
 
-.listing-description {
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.status-pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.status-active {
+  background: rgba(6, 214, 160, 0.2);
+  color: var(--accent);
+}
+
+.status-sold {
+  background: rgba(148, 163, 184, 0.2);
   color: var(--text-secondary);
-  line-height: 1.5;
-  margin-bottom: 12px;
 }
 
 .listing-actions {
   display: flex;
-  gap: 8px;
   flex-direction: column;
+  gap: 8px;
 }
 
-.btn {
-  padding: 10px 16px;
+.btn-action {
+  padding: 8px 16px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+  font-size: 0.85rem;
   white-space: nowrap;
+  transition: all 0.2s;
 }
 
 .btn-approve {
-  background: var(--success);
-  color: white;
+  background: var(--accent);
+  color: var(--bg-dark);
 }
 
 .btn-approve:hover {
-  background: #16a34a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(6, 214, 160, 0.3);
 }
 
-.btn-reject {
-  background: var(--danger);
-  color: white;
-}
-
-.btn-reject:hover {
-  background: #dc2626;
-}
-
-.btn-view {
-  background: transparent;
-  border: 1px solid var(--border);
+.btn-sold {
+  background: rgba(148, 163, 184, 0.2);
   color: var(--text-primary);
 }
 
-.btn-view:hover {
-  background: rgba(255,255,255,0.05);
+.btn-delete {
+  background: rgba(239, 71, 111, 0.2);
+  color: var(--danger);
 }
 
-.badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.badge-pending {
-  background: rgba(245,158,11,0.2);
-  color: var(--warning);
-}
-
-.badge-active {
-  background: rgba(34,197,94,0.2);
-  color: var(--success);
-}
-
-.badge-verified {
-  background: rgba(6,214,160,0.2);
-  color: var(--accent);
+.btn-view {
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
 }
 
 .empty-state {
@@ -240,10 +340,9 @@ h1 {
   color: var(--text-secondary);
 }
 
-.empty-state i {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.3;
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @media (max-width: 768px) {
@@ -253,254 +352,374 @@ h1 {
   
   .listing-actions {
     flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .refresh-controls {
+    width: 100%;
   }
 }
 </style>
 </head>
 <body>
 
-<div class="admin-container">
-  <header>
-    <h1><i data-lucide="shield-check"></i> Admin Panel</h1>
-    <p style="color: var(--text-secondary);">Manage and verify CampusMarket listings</p>
-  </header>
+<!-- Login Screen -->
+<div class="login-container" id="loginContainer">
+  <div class="login-header">
+    <h1>🛡️ Admin Panel</h1>
+    <p style="color: var(--text-secondary);">CampusMarket DUT</p>
+  </div>
+  <form id="loginForm">
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="passwordInput" placeholder="Enter admin password" required>
+    </div>
+    <button type="submit" class="btn-login">Login</button>
+  </form>
+</div>
+
+<!-- Dashboard -->
+<div class="dashboard" id="dashboard">
+  
+  <!-- Header with Refresh -->
+  <div class="admin-header">
+    <div class="admin-title">
+      <h1>📊 Admin Dashboard</h1>
+      <div class="admin-subtitle">
+        Last updated: <span id="lastUpdate">Just now</span> • 
+        Auto-refresh: <span id="autoStatus">Every 20s</span>
+      </div>
+    </div>
+    <div class="refresh-controls">
+      <button class="btn-refresh" onclick="forceRefresh()">
+        <i data-lucide="refresh-cw" id="refreshIcon" width="18"></i>
+        Refresh Now
+      </button>
+      <button class="btn-toggle" id="autoRefreshBtn" onclick="toggleAutoRefresh()">
+        Auto: ON
+      </button>
+    </div>
+  </div>
 
   <!-- Stats -->
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-value stat-pending" id="statPending">0</div>
-      <div class="stat-label">Pending Review</div>
+      <div class="stat-value" id="pendingCount">0</div>
+      <div class="stat-label">⏳ Pending Review</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value stat-active" id="statActive">0</div>
-      <div class="stat-label">Active Listings</div>
+      <div class="stat-value" id="activeCount">0</div>
+      <div class="stat-label">✅ Active Listings</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value stat-sold" id="statSold">0</div>
-      <div class="stat-label">Sold Items</div>
+      <div class="stat-value" id="soldCount">0</div>
+      <div class="stat-label">💰 Sold Items</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value" id="statTotal">0</div>
-      <div class="stat-label">Total Listings</div>
+      <div class="stat-value" id="totalCount">0</div>
+      <div class="stat-label">📦 Total Listings</div>
     </div>
   </div>
 
   <!-- Filters -->
   <div class="filters">
-    <button class="filter-btn active" data-filter="all" onclick="filterListings('all')">
-      All Listings
-    </button>
-    <button class="filter-btn" data-filter="pending" onclick="filterListings('pending')">
-      Pending Review
-    </button>
-    <button class="filter-btn" data-filter="active" onclick="filterListings('active')">
-      Active
-    </button>
-    <button class="filter-btn" data-filter="sold" onclick="filterListings('sold')">
-      Sold
-    </button>
+    <button class="filter-btn active" onclick="filterListings('all')">All Listings</button>
+    <button class="filter-btn" onclick="filterListings('pending')">⏳ Pending</button>
+    <button class="filter-btn" onclick="filterListings('active')">✅ Active</button>
+    <button class="filter-btn" onclick="filterListings('sold')">💰 Sold</button>
   </div>
 
   <!-- Listings -->
-  <div class="listings-grid" id="listingsGrid">
-    <div class="empty-state">
-      <i data-lucide="loader"></i>
-      <p>Loading listings...</p>
+  <div class="listings-container" id="listingsContainer">
+    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+      <i data-lucide="loader" style="animation: spin 1s linear infinite; font-size: 48px;"></i>
+      <p style="margin-top: 16px;">Loading listings...</p>
     </div>
   </div>
+
 </div>
 
-<!-- Add this at the top of your admin panel, right after the password section -->
-<div style="background: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-  <div>
-    <h3 style="margin: 0 0 8px 0; color: var(--accent);">
-      <i data-lucide="activity"></i> Live Admin Panel
-    </h3>
-    <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
-      Last refreshed: <span id="lastRefreshTime">Just now</span> • 
-      <span id="pendingCountDisplay">0</span> pending
-    </p>
-  </div>
-  <div style="display: flex; gap: 12px;">
-    <button onclick="forceRefreshNow()" style="padding: 10px 20px; background: linear-gradient(135deg, var(--primary), var(--accent)); border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-      <i data-lucide="refresh-cw" id="refreshIcon" width="18"></i>
-      Refresh Now
-    </button>
-    <button onclick="toggleAutoRefresh()" id="autoRefreshBtn" style="padding: 10px 20px; background: var(--bg-dark); border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-weight: 600; cursor: pointer;">
-      Auto: ON
-    </button>
-  </div>
-</div>
-
-  
 <script>
 lucide.createIcons();
 
-let ALL_LISTINGS = [];
+// ===== CONFIG =====
+const ADMIN_PASSWORD = 'dutadmin2026'; // CHANGE THIS!
+let allListings = [];
 let currentFilter = 'all';
-
-// Password protection
-const ADMIN_PASSWORD = '22490622CM_adminsOnly!'; // CHANGE THIS!
-
-function checkAuth() {
-  const saved = sessionStorage.getItem('admin_auth');
-  if (saved === ADMIN_PASSWORD) return true;
-  
-  const password = prompt('Enter admin password:');
-  if (password === ADMIN_PASSWORD) {
-    sessionStorage.setItem('admin_auth', password);
-    return true;
-  }
-  
-  alert('❌ Access denied');
-  window.location.href = 'index.html';
-  return false;
-}
-
-
-// ===== AGGRESSIVE CACHE BUSTING & AUTO REFRESH =====
 let autoRefreshEnabled = true;
-let autoRefreshInterval = null;
+let refreshInterval = null;
 
-// Force immediate refresh with cache clearing
-async function forceRefreshNow() {
-  console.log('🔄 FORCE REFRESH at', new Date().toLocaleTimeString());
+// ===== LOGIN =====
+document.getElementById('loginForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const password = document.getElementById('passwordInput').value;
   
-  // Spin the icon
-  const icon = document.getElementById('refreshIcon');
-  icon.style.animation = 'spin 0.5s linear infinite';
-  
-  // Clear browser cache
-  if ('caches' in window) {
-    const cacheNames = await caches.keys();
-    await Promise.all(cacheNames.map(name => caches.delete(name)));
-    console.log('🗑️ Cleared browser cache');
+  if (password === ADMIN_PASSWORD) {
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('dashboard').classList.add('active');
+    sessionStorage.setItem('adminAuth', 'true');
+    loadListings();
+    startAutoRefresh();
+  } else {
+    alert('❌ Incorrect password');
   }
-  
-  // Fetch with cache-busting timestamp
-  await fetchListingsWithCacheBust();
-  
-  // Update timestamp
-  document.getElementById('lastRefreshTime').textContent = new Date().toLocaleTimeString();
-  
-  // Stop spinning
-  setTimeout(() => {
-    icon.style.animation = '';
-  }, 500);
+});
+
+// Check if already logged in
+if (sessionStorage.getItem('adminAuth') === 'true') {
+  document.getElementById('loginContainer').style.display = 'none';
+  document.getElementById('dashboard').classList.add('active');
+  loadListings();
+  startAutoRefresh();
 }
 
-// Fetch listings with aggressive cache busting
-async function fetchListingsWithCacheBust() {
+// ===== LOAD LISTINGS =====
+async function loadListings() {
   try {
-    console.log('📡 Fetching listings with cache bust...');
-    
-    // Add random query param to bust cache
-    const timestamp = Date.now();
+    console.log('📡 Fetching listings...', new Date().toLocaleTimeString());
     
     const { data, error } = await supabaseClient
       .from('listings')
       .select('*')
       .order('created_at', { ascending: false });
     
-    if (error) {
-      console.error('❌ Fetch error:', error);
-      throw error;
-    }
+    if (error) throw error;
     
-    console.log(`✅ Fetched ${data.length} listings at ${new Date().toLocaleTimeString()}`);
-    
-    if (data.length > 0) {
-      console.log('📅 Newest listing:', data[0].title, 'created at', data[0].created_at);
-    }
-    
-    // Count pending
-    const pendingCount = data.filter(l => l.status === 'pending').length;
-    document.getElementById('pendingCountDisplay').textContent = pendingCount;
-    
-    // Update document title with pending count
-    document.title = pendingCount > 0 ? `(${pendingCount}) Admin Panel` : 'Admin Panel';
-    
-    // Store in global variable (make sure your existing code uses this)
     allListings = data || [];
+    console.log(`✅ Loaded ${allListings.length} listings`);
     
-    // Re-render (call your existing render function)
-    renderListings();
     updateStats();
+    displayListings();
+    updateTimestamp();
     
-    return data;
-    
-  } catch (err) {
-    console.error('💥 Failed to fetch:', err);
-    alert('Failed to refresh. Check console for details.');
+  } catch (error) {
+    console.error('❌ Error:', error);
+    document.getElementById('listingsContainer').innerHTML = `
+      <div style="text-align: center; padding: 40px; color: var(--danger);">
+        <i data-lucide="wifi-off" style="font-size: 48px;"></i>
+        <p style="margin-top: 16px;">Failed to load listings</p>
+        <button onclick="loadListings()" style="margin-top: 16px; padding: 12px 24px; background: var(--accent); border: none; border-radius: 8px; color: var(--bg-dark); cursor: pointer; font-weight: 600;">
+          Retry
+        </button>
+      </div>
+    `;
+    lucide.createIcons();
   }
 }
 
-// Toggle auto-refresh
+// ===== UPDATE STATS =====
+function updateStats() {
+  const pending = allListings.filter(l => l.status === 'pending').length;
+  const active = allListings.filter(l => l.status === 'active').length;
+  const sold = allListings.filter(l => l.status === 'sold').length;
+  
+  document.getElementById('pendingCount').textContent = pending;
+  document.getElementById('activeCount').textContent = active;
+  document.getElementById('soldCount').textContent = sold;
+  document.getElementById('totalCount').textContent = allListings.length;
+  
+  // Update page title with pending count
+  document.title = pending > 0 ? `(${pending}) Admin Panel` : 'Admin Panel';
+}
+
+// ===== DISPLAY LISTINGS =====
+function displayListings() {
+  const container = document.getElementById('listingsContainer');
+  
+  let filtered = allListings;
+  if (currentFilter !== 'all') {
+    filtered = allListings.filter(l => l.status === currentFilter);
+  }
+  
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <i data-lucide="inbox" style="font-size: 64px; opacity: 0.3;"></i>
+        <h3 style="margin-top: 16px;">No ${currentFilter === 'all' ? '' : currentFilter} listings</h3>
+      </div>
+    `;
+    lucide.createIcons();
+    return;
+  }
+  
+  container.innerHTML = filtered.map(listing => {
+    const statusClass = `status-${listing.status}`;
+    const statusText = listing.status.charAt(0).toUpperCase() + listing.status.slice(1);
+    
+    const imageHTML = listing.images && listing.images.length > 0
+      ? `<img src="${listing.images[0]}" alt="${listing.title}">`
+      : (listing.emoji || '📦');
+    
+    return `
+      <div class="listing-card">
+        <div class="listing-image">${imageHTML}</div>
+        
+        <div class="listing-info">
+          <span class="status-badge ${statusClass}">${statusText}</span>
+          <h3>${listing.title}</h3>
+          <div class="listing-meta">
+            <span><i data-lucide="tag" width="14"></i> R${listing.price.toLocaleString()}</span>
+            <span><i data-lucide="user" width="14"></i> ${listing.seller_name}</span>
+            <span><i data-lucide="phone" width="14"></i> ${listing.seller_phone}</span>
+            <span><i data-lucide="map-pin" width="14"></i> ${listing.campus}</span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.9rem;">
+            Created: ${new Date(listing.created_at).toLocaleString()}
+          </p>
+        </div>
+        
+        <div class="listing-actions">
+          ${listing.status === 'pending' ? `
+            <button class="btn-action btn-approve" onclick="approveListing(${listing.id})">
+              ✅ Approve
+            </button>
+          ` : ''}
+          ${listing.status === 'active' ? `
+            <button class="btn-action btn-sold" onclick="markAsSold(${listing.id})">
+              💰 Mark Sold
+            </button>
+          ` : ''}
+          <button class="btn-action btn-view" onclick="window.open('ListingDetails.html?id=${listing.id}', '_blank')">
+            👁️ View
+          </button>
+          <button class="btn-action btn-delete" onclick="deleteListing(${listing.id}, '${listing.title}')">
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  lucide.createIcons();
+}
+
+// ===== FILTER LISTINGS =====
+function filterListings(filter) {
+  currentFilter = filter;
+  
+  // Update active button
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.target.classList.add('active');
+  
+  displayListings();
+}
+
+// ===== APPROVE LISTING =====
+async function approveListing(id) {
+  if (!confirm('Approve this listing?')) return;
+  
+  try {
+    const { error } = await supabaseClient
+      .from('listings')
+      .update({ status: 'active', verified: true })
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    alert('✅ Listing approved!');
+    loadListings();
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('Failed to approve listing');
+  }
+}
+
+// ===== MARK AS SOLD =====
+async function markAsSold(id) {
+  if (!confirm('Mark this listing as sold?')) return;
+  
+  try {
+    const { error } = await supabaseClient
+      .from('listings')
+      .update({ status: 'sold' })
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    alert('💰 Marked as sold!');
+    loadListings();
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('Failed to mark as sold');
+  }
+}
+
+// ===== DELETE LISTING =====
+async function deleteListing(id, title) {
+  if (!confirm(`Delete "${title}"?\n\nThis cannot be undone!`)) return;
+  
+  try {
+    const { error } = await supabaseClient
+      .from('listings')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    alert('🗑️ Listing deleted!');
+    loadListings();
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('Failed to delete listing');
+  }
+}
+
+// ===== AUTO-REFRESH =====
+function startAutoRefresh() {
+  if (refreshInterval) clearInterval(refreshInterval);
+  
+  refreshInterval = setInterval(() => {
+    if (autoRefreshEnabled) {
+      console.log('⏰ Auto-refresh');
+      loadListings();
+    }
+  }, 20000); // Every 20 seconds
+}
+
 function toggleAutoRefresh() {
   autoRefreshEnabled = !autoRefreshEnabled;
   const btn = document.getElementById('autoRefreshBtn');
   
   if (autoRefreshEnabled) {
     btn.textContent = 'Auto: ON';
-    btn.style.background = 'var(--bg-dark)';
-    btn.style.border = '1px solid var(--accent)';
+    btn.style.borderColor = 'var(--accent)';
     btn.style.color = 'var(--accent)';
-    startAutoRefresh();
+    document.getElementById('autoStatus').textContent = 'Every 20s';
   } else {
     btn.textContent = 'Auto: OFF';
-    btn.style.background = 'var(--bg-dark)';
-    btn.style.border = '1px solid var(--text-secondary)';
+    btn.style.borderColor = 'var(--text-secondary)';
     btn.style.color = 'var(--text-secondary)';
-    stopAutoRefresh();
+    document.getElementById('autoStatus').textContent = 'Disabled';
   }
 }
 
-// Start auto-refresh (every 15 seconds)
-function startAutoRefresh() {
-  if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+function forceRefresh() {
+  const icon = document.getElementById('refreshIcon');
+  icon.style.animation = 'spin 0.5s linear';
   
-  autoRefreshInterval = setInterval(() => {
-    if (autoRefreshEnabled) {
-      console.log('⏰ Auto-refresh triggered');
-      fetchListingsWithCacheBust();
-      document.getElementById('lastRefreshTime').textContent = new Date().toLocaleTimeString();
-    }
-  }, 15000); // Every 15 seconds
+  loadListings();
   
-  console.log('✅ Auto-refresh started (every 15s)');
+  setTimeout(() => {
+    icon.style.animation = '';
+  }, 500);
 }
 
-function stopAutoRefresh() {
-  if (autoRefreshInterval) {
-    clearInterval(autoRefreshInterval);
-    autoRefreshInterval = null;
-    console.log('❌ Auto-refresh stopped');
-  }
+function updateTimestamp() {
+  document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
 }
 
-// Add spin animation
-const adminStyle = document.createElement('style');
-adminStyle.textContent = `
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-`;
-document.head.appendChild(adminStyle);
-
-// Start auto-refresh on page load
-startAutoRefresh();
-
-// Initial fetch
-forceRefreshNow();
-
-// Also refresh when tab becomes visible again
+// Refresh when tab becomes visible
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && autoRefreshEnabled) {
-    console.log('👁️ Tab visible - refreshing');
-    forceRefreshNow();
+    loadListings();
   }
 });
 </script>
+
 </body>
 </html>
