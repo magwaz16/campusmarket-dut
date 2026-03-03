@@ -314,47 +314,48 @@ section {
   font-size: clamp(0.9rem, 4vw, 1rem);
 }
 
+/* Fix WhatsApp button layout */
 .listing-meta {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  padding-top:8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05 );
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .listing-meta span {
   display: flex;
   align-items: center;
   gap: 4px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 .whatsapp-btn {
-  margin-top: 12px;
   width: 100%;
-  padding: 11px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(37, 211, 102, 0.4);
-  background: rgba(37, 211, 102, 0.1);
-  color: #25D366;
-  font-weight: 600;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #25D366, #128C7E);
+  color: white;
+  border: none;
+  border-radius: 8px;
   font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.25s ease;
+  gap: 6px;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
 }
 
 .whatsapp-btn:hover {
-  background: #25D366;
-  color: white;
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.35);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
 }
 
+.whatsapp-btn:active {
+  transform: translateY(0);
+}
 .view-all-btn-container {
   text-align: center;
   margin-top: 24px;
@@ -567,3 +568,4 @@ section {
     display: none;
   }
 }
+
