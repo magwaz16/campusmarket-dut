@@ -310,6 +310,29 @@ h1 {
   </div>
 </div>
 
+<!-- Add this at the top of your admin panel, right after the password section -->
+<div style="background: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+  <div>
+    <h3 style="margin: 0 0 8px 0; color: var(--accent);">
+      <i data-lucide="activity"></i> Live Admin Panel
+    </h3>
+    <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
+      Last refreshed: <span id="lastRefreshTime">Just now</span> • 
+      <span id="pendingCountDisplay">0</span> pending
+    </p>
+  </div>
+  <div style="display: flex; gap: 12px;">
+    <button onclick="forceRefreshNow()" style="padding: 10px 20px; background: linear-gradient(135deg, var(--primary), var(--accent)); border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+      <i data-lucide="refresh-cw" id="refreshIcon" width="18"></i>
+      Refresh Now
+    </button>
+    <button onclick="toggleAutoRefresh()" id="autoRefreshBtn" style="padding: 10px 20px; background: var(--bg-dark); border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-weight: 600; cursor: pointer;">
+      Auto: ON
+    </button>
+  </div>
+</div>
+
+  
 <script>
 lucide.createIcons();
 
@@ -334,212 +357,150 @@ function checkAuth() {
   return false;
 }
 
-// Fetch all listings
-async function fetchListings() {
+
+// ===== AGGRESSIVE CACHE BUSTING & AUTO REFRESH =====
+let autoRefreshEnabled = true;
+let autoRefreshInterval = null;
+
+// Force immediate refresh with cache clearing
+async function forceRefreshNow() {
+  console.log('🔄 FORCE REFRESH at', new Date().toLocaleTimeString());
+  
+  // Spin the icon
+  const icon = document.getElementById('refreshIcon');
+  icon.style.animation = 'spin 0.5s linear infinite';
+  
+  // Clear browser cache
+  if ('caches' in window) {
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames.map(name => caches.delete(name)));
+    console.log('🗑️ Cleared browser cache');
+  }
+  
+  // Fetch with cache-busting timestamp
+  await fetchListingsWithCacheBust();
+  
+  // Update timestamp
+  document.getElementById('lastRefreshTime').textContent = new Date().toLocaleTimeString();
+  
+  // Stop spinning
+  setTimeout(() => {
+    icon.style.animation = '';
+  }, 500);
+}
+
+// Fetch listings with aggressive cache busting
+async function fetchListingsWithCacheBust() {
   try {
-    // IMPORTANT: Temporarily disable RLS to fetch ALL listings
-    const { data, error } = await supabaseAdmin
+    console.log('📡 Fetching listings with cache bust...');
+    
+    // Add random query param to bust cache
+    const timestamp = Date.now();
+    
+    const { data, error } = await supabaseClient
       .from('listings')
       .select('*')
       .order('created_at', { ascending: false });
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Fetch error:', error);
+      throw error;
+    }
     
-    ALL_LISTINGS = data || [];
-    updateStats();
+    console.log(`✅ Fetched ${data.length} listings at ${new Date().toLocaleTimeString()}`);
+    
+    if (data.length > 0) {
+      console.log('📅 Newest listing:', data[0].title, 'created at', data[0].created_at);
+    }
+    
+    // Count pending
+    const pendingCount = data.filter(l => l.status === 'pending').length;
+    document.getElementById('pendingCountDisplay').textContent = pendingCount;
+    
+    // Update document title with pending count
+    document.title = pendingCount > 0 ? `(${pendingCount}) Admin Panel` : 'Admin Panel';
+    
+    // Store in global variable (make sure your existing code uses this)
+    allListings = data || [];
+    
+    // Re-render (call your existing render function)
     renderListings();
+    updateStats();
     
-  } catch (error) {
-    console.error('❌ Error:', error);
-    document.getElementById('listingsGrid').innerHTML = `
-      <div class="empty-state">
-        <i data-lucide="alert-circle"></i>
-        <p>Error loading listings. Check console.</p>
-      </div>
-    `;
-    lucide.createIcons();
+    return data;
+    
+  } catch (err) {
+    console.error('💥 Failed to fetch:', err);
+    alert('Failed to refresh. Check console for details.');
   }
 }
 
-// Update stats
-function updateStats() {
-  const pending = ALL_LISTINGS.filter(l => l.status === 'pending').length;
-  const active = ALL_LISTINGS.filter(l => l.status === 'active').length;
-  const sold = ALL_LISTINGS.filter(l => l.status === 'sold').length;
+// Toggle auto-refresh
+function toggleAutoRefresh() {
+  autoRefreshEnabled = !autoRefreshEnabled;
+  const btn = document.getElementById('autoRefreshBtn');
   
-  document.getElementById('statPending').textContent = pending;
-  document.getElementById('statActive').textContent = active;
-  document.getElementById('statSold').textContent = sold;
-  document.getElementById('statTotal').textContent = ALL_LISTINGS.length;
-}
-
-// Filter listings
-function filterListings(filter) {
-  currentFilter = filter;
-  
-  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
-  
-  renderListings();
-}
-
-// Render listings
-function renderListings() {
-  const grid = document.getElementById('listingsGrid');
-  
-  let filtered = ALL_LISTINGS;
-  if (currentFilter !== 'all') {
-    filtered = ALL_LISTINGS.filter(l => l.status === currentFilter);
-  }
-  
-  if (filtered.length === 0) {
-    grid.innerHTML = `
-      <div class="empty-state">
-        <i data-lucide="inbox"></i>
-        <p>No ${currentFilter === 'all' ? '' : currentFilter} listings found</p>
-      </div>
-    `;
-    lucide.createIcons();
-    return;
-  }
-  
-  grid.innerHTML = '';
-  
-  filtered.forEach(listing => {
-    const card = createListingCard(listing);
-    grid.appendChild(card);
-  });
-  
-  lucide.createIcons();
-}
-
-// Create listing card
-function createListingCard(listing) {
-  const card = document.createElement('div');
-  card.className = 'listing-card';
-  
-  const date = new Date(listing.created_at).toLocaleString();
-  const imageHTML = listing.images && listing.images.length > 0
-    ? `<img src="${listing.images[0]}" class="listing-image">`
-    : `<div class="listing-image">${listing.emoji || '📦'}</div>`;
-  
-  card.innerHTML = `
-    ${imageHTML}
-    
-    <div class="listing-info">
-      <h3>${listing.title}</h3>
-      <div class="listing-meta">
-        <span><i data-lucide="user" width="14"></i> ${listing.seller_name}</span>
-        <span><i data-lucide="phone" width="14"></i> ${listing.seller_phone}</span>
-        <span><i data-lucide="dollar-sign" width="14"></i> R${parseFloat(listing.price).toLocaleString()}</span>
-        <span><i data-lucide="map-pin" width="14"></i> ${listing.campus} - ${listing.location}</span>
-        <span><i data-lucide="clock" width="14"></i> ${date}</span>
-      </div>
-      <p class="listing-description">${listing.description}</p>
-      <div>
-        <span class="badge badge-${listing.status}">${listing.status.toUpperCase()}</span>
-        ${listing.verified ? '<span class="badge badge-verified">VERIFIED</span>' : ''}
-      </div>
-    </div>
-    
-    <div class="listing-actions">
-      ${listing.status === 'pending' ? `
-        <button class="btn btn-approve" onclick="approveListing(${listing.id})">
-          <i data-lucide="check" width="16"></i>
-          Approve
-        </button>
-      ` : ''}
-      ${listing.status === 'active' ? `
-        <button class="btn btn-reject" onclick="markAsSold(${listing.id})">
-          <i data-lucide="check-circle" width="16"></i>
-          Mark Sold
-        </button>
-      ` : ''}
-      <button class="btn btn-reject" onclick="rejectListing(${listing.id})">
-        <i data-lucide="x" width="16"></i>
-        Delete
-      </button>
-      <button class="btn btn-view" onclick="window.open('ListingDetails.html?id=${listing.id}', '_blank')">
-        <i data-lucide="eye" width="16"></i>
-        View
-      </button>
-    </div>
-  `;
-  
-  return card;
-}
-
-// Approve listing
-async function approveListing(id) {
-  if (!confirm('Approve this listing? It will become visible to all students.')) return;
-  
-  try {
-    const { error } = await supabaseAdmin
-      .from('listings')
-      .update({ 
-        status: 'active',
-        verified: true
-      })
-      .eq('id', id);
-    
-    if (error) throw error;
-    
-    alert('✅ Listing approved!');
-    fetchListings();
-    
-  } catch (error) {
-    console.error('❌ Error:', error);
-    alert('Error approving listing');
+  if (autoRefreshEnabled) {
+    btn.textContent = 'Auto: ON';
+    btn.style.background = 'var(--bg-dark)';
+    btn.style.border = '1px solid var(--accent)';
+    btn.style.color = 'var(--accent)';
+    startAutoRefresh();
+  } else {
+    btn.textContent = 'Auto: OFF';
+    btn.style.background = 'var(--bg-dark)';
+    btn.style.border = '1px solid var(--text-secondary)';
+    btn.style.color = 'var(--text-secondary)';
+    stopAutoRefresh();
   }
 }
 
-// Mark as sold
-async function markAsSold(id) {
-  if (!confirm('Mark this listing as sold?')) return;
+// Start auto-refresh (every 15 seconds)
+function startAutoRefresh() {
+  if (autoRefreshInterval) clearInterval(autoRefreshInterval);
   
-  try {
-    const { error } = await supabaseAdmin
-      .from('listings')
-      .update({ status: 'sold' })
-      .eq('id', id);
-    
-    if (error) throw error;
-    
-    alert('✅ Marked as sold!');
-    fetchListings();
-    
-  } catch (error) {
-    console.error('❌ Error:', error);
-    alert('Error updating listing');
+  autoRefreshInterval = setInterval(() => {
+    if (autoRefreshEnabled) {
+      console.log('⏰ Auto-refresh triggered');
+      fetchListingsWithCacheBust();
+      document.getElementById('lastRefreshTime').textContent = new Date().toLocaleTimeString();
+    }
+  }, 15000); // Every 15 seconds
+  
+  console.log('✅ Auto-refresh started (every 15s)');
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+    autoRefreshInterval = null;
+    console.log('❌ Auto-refresh stopped');
   }
 }
 
-// Reject/delete listing
-async function rejectListing(id) {
-  if (!confirm('⚠️ DELETE this listing permanently? This cannot be undone.')) return;
-  
-  try {
-    const { error } = await supabaseAdmin
-      .from('listings')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
-    
-    alert('✅ Listing deleted');
-    fetchListings();
-    
-  } catch (error) {
-    console.error('❌ Error:', error);
-    alert('Error deleting listing');
+// Add spin animation
+const adminStyle = document.createElement('style');
+adminStyle.textContent = `
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
-}
+`;
+document.head.appendChild(adminStyle);
 
-// Init
-if (checkAuth()) {
-  fetchListings();
-  setInterval(fetchListings, 30000); // Refresh every 30 seconds
-}
+// Start auto-refresh on page load
+startAutoRefresh();
+
+// Initial fetch
+forceRefreshNow();
+
+// Also refresh when tab becomes visible again
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && autoRefreshEnabled) {
+    console.log('👁️ Tab visible - refreshing');
+    forceRefreshNow();
+  }
+});
 </script>
 </body>
 </html>
