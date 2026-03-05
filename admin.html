@@ -4,15 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Panel - CampusMarket DUT</title>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
 <style>
 :root {
   --primary: #6366f1;
   --accent: #06d6a0;
   --danger: #ef476f;
+  --warning: #f59e0b;
   --bg-dark: #0f172a;
   --bg-card: #1e293b;
   --text-primary: #f1f5f9;
@@ -110,55 +111,39 @@ body {
   padding: 20px;
   border-radius: 12px;
   margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
+  border: 1px solid var(--border);
 }
 
 .admin-title h1 {
   font-size: 1.8rem;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
-.admin-subtitle {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-}
-
-.refresh-controls {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.btn-refresh {
-  padding: 10px 20px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  border: none;
-  border-radius: 8px;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
+.realtime-status {
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s;
-}
-
-.btn-refresh:hover {
-  transform: translateY(-2px);
-}
-
-.btn-toggle {
-  padding: 10px 20px;
+  margin-top: 12px;
+  padding: 12px;
   background: var(--bg-dark);
-  border: 1px solid var(--accent);
   border-radius: 8px;
-  color: var(--accent);
-  font-weight: 600;
-  cursor: pointer;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s infinite;
+}
+
+.status-dot.disconnected {
+  background: var(--danger);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .stats-grid {
@@ -194,6 +179,7 @@ body {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  border: 1px solid var(--border);
 }
 
 .filter-btn {
@@ -210,6 +196,7 @@ body {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--bg-dark);
+  font-weight: 600;
 }
 
 .listings-container {
@@ -226,6 +213,17 @@ body {
   grid-template-columns: 80px 1fr auto;
   gap: 20px;
   align-items: start;
+  animation: fadeIn 0.3s ease;
+}
+
+.listing-card.new {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(6, 214, 160, 0.3);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .listing-image {
@@ -278,7 +276,7 @@ body {
 
 .status-pending {
   background: rgba(245, 158, 11, 0.2);
-  color: #f59e0b;
+  color: var(--warning);
 }
 
 .status-active {
@@ -306,6 +304,10 @@ body {
   font-size: 0.85rem;
   white-space: nowrap;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .btn-approve {
@@ -334,15 +336,45 @@ body {
   border: 1px solid var(--border);
 }
 
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 16px 24px;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  z-index: 10000;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notification.success {
+  background: var(--accent);
+  color: var(--bg-dark);
+}
+
+.notification.warning {
+  background: var(--warning);
+  color: var(--bg-dark);
+}
+
+.notification.info {
+  background: var(--primary);
+}
+
+@keyframes slideIn {
+  from { transform: translateX(400px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
 .empty-state {
   text-align: center;
   padding: 60px 20px;
   color: var(--text-secondary);
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 @media (max-width: 768px) {
@@ -353,10 +385,6 @@ body {
   .listing-actions {
     flex-direction: row;
     flex-wrap: wrap;
-  }
-  
-  .refresh-controls {
-    width: 100%;
   }
 }
 </style>
@@ -381,23 +409,15 @@ body {
 <!-- Dashboard -->
 <div class="dashboard" id="dashboard">
   
-  <!-- Header with Refresh -->
+  <!-- Header -->
   <div class="admin-header">
     <div class="admin-title">
       <h1>📊 Admin Dashboard</h1>
-      <div class="admin-subtitle">
-        Last updated: <span id="lastUpdate">Just now</span> • 
-        Auto-refresh: <span id="autoStatus">Every 20s</span>
-      </div>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">Realtime Mode - Listings appear instantly</p>
     </div>
-    <div class="refresh-controls">
-      <button class="btn-refresh" onclick="forceRefresh()">
-        <i data-lucide="refresh-cw" id="refreshIcon" width="18"></i>
-        Refresh Now
-      </button>
-      <button class="btn-toggle" id="autoRefreshBtn" onclick="toggleAutoRefresh()">
-        Auto: ON
-      </button>
+    <div class="realtime-status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Connecting to realtime...</span>
     </div>
   </div>
 
@@ -443,11 +463,343 @@ body {
 lucide.createIcons();
 
 // ===== CONFIG =====
-const ADMIN_PASSWORD = '22490622CM_adminsOnly!'; // CHANGE THIS!
-let allListings = [];
+const ADMIN_PASSWORD = 'dutadmin2026'; // CHANGE THIS!
 let currentFilter = 'all';
-let autoRefreshEnabled = true;
-let refreshInterval = null;
+
+// ===== REALTIME ADMIN PANEL CLASS =====
+class RealtimeAdminPanel {
+  constructor() {
+    this.listings = [];
+    this.channel = null;
+    this.isConnected = false;
+    this.init();
+  }
+
+  async init() {
+    console.log('🚀 Starting Realtime Admin Panel...');
+    
+    // Load initial listings
+    await this.fetchListings();
+    
+    // Start realtime subscription
+    this.subscribeToListings();
+  }
+
+  async fetchListings() {
+    try {
+      console.log('📡 Fetching listings from Supabase...');
+      
+      const { data, error } = await supabaseClient
+        .from('listings')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      this.listings = data || [];
+      console.log(`✅ Loaded ${this.listings.length} listings`);
+      
+      this.updateStats();
+      this.displayListings();
+      
+    } catch (error) {
+      console.error('❌ Error fetching listings:', error);
+      this.showNotification('Failed to load listings', 'warning');
+    }
+  }
+
+  subscribeToListings() {
+    console.log('👂 Setting up realtime subscription...');
+    
+    // Remove existing subscription if any
+    if (this.channel) {
+      supabaseClient.removeChannel(this.channel);
+    }
+
+    // Create realtime channel
+    this.channel = supabaseClient
+      .channel('listings-changes')
+      .on(
+        'postgres_changes',
+        { 
+          event: '*', // Listen to ALL events (INSERT, UPDATE, DELETE)
+          schema: 'public', 
+          table: 'listings' 
+        },
+        (payload) => {
+          console.log('🔔 Realtime event received:', payload);
+          this.handleRealtimeUpdate(payload);
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Subscription status:', status);
+        this.updateConnectionStatus(status);
+        
+        if (status === 'CLOSED') {
+          console.log('⚠️ Connection closed, attempting reconnect...');
+          setTimeout(() => this.subscribeToListings(), 3000);
+        }
+      });
+  }
+
+  updateConnectionStatus(status) {
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    
+    if (status === 'SUBSCRIBED') {
+      this.isConnected = true;
+      statusDot.classList.remove('disconnected');
+      statusText.textContent = '✅ Connected - Listening for new listings';
+    } else if (status === 'CLOSED') {
+      this.isConnected = false;
+      statusDot.classList.add('disconnected');
+      statusText.textContent = '❌ Disconnected - Reconnecting...';
+    } else {
+      statusText.textContent = `⏳ ${status}...`;
+    }
+  }
+
+  handleRealtimeUpdate(payload) {
+    switch (payload.eventType) {
+      case 'INSERT':
+        console.log('➕ New listing created:', payload.new);
+        this.handleNewListing(payload.new);
+        break;
+        
+      case 'UPDATE':
+        console.log('✏️ Listing updated:', payload.new);
+        this.handleUpdatedListing(payload.new);
+        break;
+        
+      case 'DELETE':
+        console.log('🗑️ Listing deleted:', payload.old);
+        this.handleDeletedListing(payload.old);
+        break;
+    }
+  }
+
+  handleNewListing(newListing) {
+    // Add to beginning of array
+    this.listings.unshift(newListing);
+    
+    // Update UI
+    this.updateStats();
+    this.displayListings();
+    
+    // Show notification
+    this.showNotification(`🆕 New listing: "${newListing.title}"`, 'success');
+    
+    // Play sound
+    this.playNotificationSound();
+    
+    // Update page title
+    document.title = `(${this.getPendingCount()}) Admin Panel`;
+  }
+
+  handleUpdatedListing(updatedListing) {
+    const index = this.listings.findIndex(l => l.id === updatedListing.id);
+    
+    if (index !== -1) {
+      this.listings[index] = updatedListing;
+      this.updateStats();
+      this.displayListings();
+      this.showNotification(`✏️ Listing updated: "${updatedListing.title}"`, 'info');
+    }
+  }
+
+  handleDeletedListing(deletedListing) {
+    this.listings = this.listings.filter(l => l.id !== deletedListing.id);
+    this.updateStats();
+    this.displayListings();
+    this.showNotification(`🗑️ Listing deleted`, 'warning');
+  }
+
+  getPendingCount() {
+    return this.listings.filter(l => l.status === 'pending').length;
+  }
+
+  updateStats() {
+    const pending = this.listings.filter(l => l.status === 'pending').length;
+    const active = this.listings.filter(l => l.status === 'active').length;
+    const sold = this.listings.filter(l => l.status === 'sold').length;
+    
+    document.getElementById('pendingCount').textContent = pending;
+    document.getElementById('activeCount').textContent = active;
+    document.getElementById('soldCount').textContent = sold;
+    document.getElementById('totalCount').textContent = this.listings.length;
+    
+    // Update page title with pending count
+    document.title = pending > 0 ? `(${pending}) Admin Panel` : 'Admin Panel';
+  }
+
+  displayListings() {
+    const container = document.getElementById('listingsContainer');
+    
+    let filtered = this.listings;
+    if (currentFilter !== 'all') {
+      filtered = this.listings.filter(l => l.status === currentFilter);
+    }
+    
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i data-lucide="inbox" style="font-size: 64px; opacity: 0.3;"></i>
+          <h3 style="margin-top: 16px;">No ${currentFilter === 'all' ? '' : currentFilter} listings</h3>
+        </div>
+      `;
+      lucide.createIcons();
+      return;
+    }
+    
+    container.innerHTML = filtered.map(listing => {
+      const statusClass = `status-${listing.status}`;
+      const statusText = listing.status.charAt(0).toUpperCase() + listing.status.slice(1);
+      
+      const imageHTML = listing.images && listing.images.length > 0
+        ? `<img src="${listing.images[0]}" alt="${listing.title}">`
+        : (listing.emoji || '📦');
+      
+      // Check if listing is less than 5 minutes old
+      const isNew = (Date.now() - new Date(listing.created_at).getTime()) < 300000;
+      
+      return `
+        <div class="listing-card ${isNew ? 'new' : ''}" data-id="${listing.id}">
+          <div class="listing-image">${imageHTML}</div>
+          
+          <div class="listing-info">
+            <span class="status-badge ${statusClass}">${statusText}</span>
+            ${isNew ? '<span class="status-badge" style="background: var(--accent); color: var(--bg-dark);">🆕 NEW</span>' : ''}
+            <h3>${listing.title}</h3>
+            <div class="listing-meta">
+              <span><i data-lucide="tag" width="14"></i> R${listing.price.toLocaleString()}</span>
+              <span><i data-lucide="user" width="14"></i> ${listing.seller_name}</span>
+              <span><i data-lucide="phone" width="14"></i> ${listing.seller_phone}</span>
+              <span><i data-lucide="map-pin" width="14"></i> ${listing.campus}</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">
+              Created: ${new Date(listing.created_at).toLocaleString()}
+            </p>
+          </div>
+          
+          <div class="listing-actions">
+            ${listing.status === 'pending' ? `
+              <button class="btn-action btn-approve" onclick="adminPanel.approveListing(${listing.id})">
+                <i data-lucide="check" width="14"></i> Approve
+              </button>
+            ` : ''}
+            ${listing.status === 'active' ? `
+              <button class="btn-action btn-sold" onclick="adminPanel.markAsSold(${listing.id})">
+                <i data-lucide="dollar-sign" width="14"></i> Mark Sold
+              </button>
+            ` : ''}
+            <button class="btn-action btn-view" onclick="window.open('ListingDetails.html?id=${listing.id}', '_blank')">
+              <i data-lucide="eye" width="14"></i> View
+            </button>
+            <button class="btn-action btn-delete" onclick="adminPanel.deleteListing(${listing.id}, '${listing.title}')">
+              <i data-lucide="trash-2" width="14"></i> Delete
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    lucide.createIcons();
+  }
+
+  async approveListing(id) {
+    if (!confirm('Approve this listing?')) return;
+    
+    try {
+      const { error } = await supabaseClient
+        .from('listings')
+        .update({ status: 'active', verified: true })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      console.log('✅ Listing approved');
+      // Realtime will update automatically
+      
+    } catch (error) {
+      console.error('❌ Error:', error);
+      alert('Failed to approve listing');
+    }
+  }
+
+  async markAsSold(id) {
+    if (!confirm('Mark this listing as sold?')) return;
+    
+    try {
+      const { error } = await supabaseClient
+        .from('listings')
+        .update({ status: 'sold' })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      console.log('💰 Marked as sold');
+      
+    } catch (error) {
+      console.error('❌ Error:', error);
+      alert('Failed to mark as sold');
+    }
+  }
+
+  async deleteListing(id, title) {
+    if (!confirm(`Delete "${title}"?\n\nThis cannot be undone!`)) return;
+    
+    try {
+      const { error } = await supabaseClient
+        .from('listings')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      console.log('🗑️ Listing deleted');
+      
+    } catch (error) {
+      console.error('❌ Error:', error);
+      alert('Failed to delete listing');
+    }
+  }
+
+  showNotification(message, type = 'info') {
+    const notif = document.createElement('div');
+    notif.className = `notification ${type}`;
+    
+    const icon = type === 'success' ? 'check-circle' : type === 'warning' ? 'alert-triangle' : 'info';
+    notif.innerHTML = `
+      <i data-lucide="${icon}" width="20"></i>
+      <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notif);
+    lucide.createIcons();
+    
+    setTimeout(() => {
+      notif.style.animation = 'slideIn 0.3s ease reverse';
+      setTimeout(() => notif.remove(), 300);
+    }, 3000);
+  }
+
+  playNotificationSound() {
+    try {
+      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVanu8LdnHQUuh9Dz2YU2Bhxqv+zplkcODVGm5O+4ZSAEMYrO89GFNwYdcfDr4ZdJDQtPp+XysWUeBjiS1/LNfi0GI33R8tOENAcdcO/r4phJDQxPp+TwxGUhBjqT1/PQfS4GI3/R8tSFNwYdcfDr4plHDAtQp+TwxmUgBDeOzvPVhjYGHG3A7+SaSQ0MTKjl8sZmIAU2jc7z1YU1Bhxwv+zmm0gNC1Gn5O/EZSAFNo/M89CEMwYccPDs4ppIDQtRp+TvvWUfBTiOz/PShjUGG3Dw7OKbSA0LUqjl8b1kHwU3jc3z0oU1Bhtw8OzhmUgNC1Ko5fG+ZSAF');
+      audio.volume = 0.3;
+      audio.play();
+    } catch (e) {
+      // Ignore sound errors
+    }
+  }
+
+  destroy() {
+    console.log('🧹 Cleaning up realtime connection...');
+    if (this.channel) {
+      supabaseClient.removeChannel(this.channel);
+    }
+  }
+}
 
 // ===== LOGIN =====
 document.getElementById('loginForm').addEventListener('submit', (e) => {
@@ -458,8 +810,9 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
     document.getElementById('loginContainer').style.display = 'none';
     document.getElementById('dashboard').classList.add('active');
     sessionStorage.setItem('adminAuth', 'true');
-    loadListings();
-    startAutoRefresh();
+    
+    // Initialize realtime admin panel
+    window.adminPanel = new RealtimeAdminPanel();
   } else {
     alert('❌ Incorrect password');
   }
@@ -469,131 +822,10 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
 if (sessionStorage.getItem('adminAuth') === 'true') {
   document.getElementById('loginContainer').style.display = 'none';
   document.getElementById('dashboard').classList.add('active');
-  loadListings();
-  startAutoRefresh();
+  window.adminPanel = new RealtimeAdminPanel();
 }
 
-// ===== LOAD LISTINGS =====
-async function loadListings() {
-  try {
-    console.log('📡 Fetching listings...', new Date().toLocaleTimeString());
-    
-    const { data, error } = await supabaseClient
-      .from('listings')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    
-    allListings = data || [];
-    console.log(`✅ Loaded ${allListings.length} listings`);
-    
-    updateStats();
-    displayListings();
-    updateTimestamp();
-    
-  } catch (error) {
-    console.error('❌ Error:', error);
-    document.getElementById('listingsContainer').innerHTML = `
-      <div style="text-align: center; padding: 40px; color: var(--danger);">
-        <i data-lucide="wifi-off" style="font-size: 48px;"></i>
-        <p style="margin-top: 16px;">Failed to load listings</p>
-        <button onclick="loadListings()" style="margin-top: 16px; padding: 12px 24px; background: var(--accent); border: none; border-radius: 8px; color: var(--bg-dark); cursor: pointer; font-weight: 600;">
-          Retry
-        </button>
-      </div>
-    `;
-    lucide.createIcons();
-  }
-}
-
-// ===== UPDATE STATS =====
-function updateStats() {
-  const pending = allListings.filter(l => l.status === 'pending').length;
-  const active = allListings.filter(l => l.status === 'active').length;
-  const sold = allListings.filter(l => l.status === 'sold').length;
-  
-  document.getElementById('pendingCount').textContent = pending;
-  document.getElementById('activeCount').textContent = active;
-  document.getElementById('soldCount').textContent = sold;
-  document.getElementById('totalCount').textContent = allListings.length;
-  
-  // Update page title with pending count
-  document.title = pending > 0 ? `(${pending}) Admin Panel` : 'Admin Panel';
-}
-
-// ===== DISPLAY LISTINGS =====
-function displayListings() {
-  const container = document.getElementById('listingsContainer');
-  
-  let filtered = allListings;
-  if (currentFilter !== 'all') {
-    filtered = allListings.filter(l => l.status === currentFilter);
-  }
-  
-  if (filtered.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <i data-lucide="inbox" style="font-size: 64px; opacity: 0.3;"></i>
-        <h3 style="margin-top: 16px;">No ${currentFilter === 'all' ? '' : currentFilter} listings</h3>
-      </div>
-    `;
-    lucide.createIcons();
-    return;
-  }
-  
-  container.innerHTML = filtered.map(listing => {
-    const statusClass = `status-${listing.status}`;
-    const statusText = listing.status.charAt(0).toUpperCase() + listing.status.slice(1);
-    
-    const imageHTML = listing.images && listing.images.length > 0
-      ? `<img src="${listing.images[0]}" alt="${listing.title}">`
-      : (listing.emoji || '📦');
-    
-    return `
-      <div class="listing-card">
-        <div class="listing-image">${imageHTML}</div>
-        
-        <div class="listing-info">
-          <span class="status-badge ${statusClass}">${statusText}</span>
-          <h3>${listing.title}</h3>
-          <div class="listing-meta">
-            <span><i data-lucide="tag" width="14"></i> R${listing.price.toLocaleString()}</span>
-            <span><i data-lucide="user" width="14"></i> ${listing.seller_name}</span>
-            <span><i data-lucide="phone" width="14"></i> ${listing.seller_phone}</span>
-            <span><i data-lucide="map-pin" width="14"></i> ${listing.campus}</span>
-          </div>
-          <p style="color: var(--text-secondary); font-size: 0.9rem;">
-            Created: ${new Date(listing.created_at).toLocaleString()}
-          </p>
-        </div>
-        
-        <div class="listing-actions">
-          ${listing.status === 'pending' ? `
-            <button class="btn-action btn-approve" onclick="approveListing(${listing.id})">
-              ✅ Approve
-            </button>
-          ` : ''}
-          ${listing.status === 'active' ? `
-            <button class="btn-action btn-sold" onclick="markAsSold(${listing.id})">
-              💰 Mark Sold
-            </button>
-          ` : ''}
-          <button class="btn-action btn-view" onclick="window.open('ListingDetails.html?id=${listing.id}', '_blank')">
-            👁️ View
-          </button>
-          <button class="btn-action btn-delete" onclick="deleteListing(${listing.id}, '${listing.title}')">
-            🗑️ Delete
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
-  
-  lucide.createIcons();
-}
-
-// ===== FILTER LISTINGS =====
+// ===== FILTER FUNCTION =====
 function filterListings(filter) {
   currentFilter = filter;
   
@@ -603,122 +835,26 @@ function filterListings(filter) {
   });
   event.target.classList.add('active');
   
-  displayListings();
-}
-
-// ===== APPROVE LISTING =====
-async function approveListing(id) {
-  if (!confirm('Approve this listing?')) return;
-  
-  try {
-    const { error } = await supabaseClient
-      .from('listings')
-      .update({ status: 'active', verified: true })
-      .eq('id', id);
-    
-    if (error) throw error;
-    
-    alert('✅ Listing approved!');
-    loadListings();
-    
-  } catch (error) {
-    console.error('❌ Error:', error);
-    alert('Failed to approve listing');
+  if (window.adminPanel) {
+    window.adminPanel.displayListings();
   }
 }
 
-// ===== MARK AS SOLD =====
-async function markAsSold(id) {
-  if (!confirm('Mark this listing as sold?')) return;
-  
-  try {
-    const { error } = await supabaseClient
-      .from('listings')
-      .update({ status: 'sold' })
-      .eq('id', id);
-    
-    if (error) throw error;
-    
-    alert('💰 Marked as sold!');
-    loadListings();
-    
-  } catch (error) {
-    console.error('❌ Error:', error);
-    alert('Failed to mark as sold');
-  }
-}
-
-// ===== DELETE LISTING =====
-async function deleteListing(id, title) {
-  if (!confirm(`Delete "${title}"?\n\nThis cannot be undone!`)) return;
-  
-  try {
-    const { error } = await supabaseClient
-      .from('listings')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
-    
-    alert('🗑️ Listing deleted!');
-    loadListings();
-    
-  } catch (error) {
-    console.error('❌ Error:', error);
-    alert('Failed to delete listing');
-  }
-}
-
-// ===== AUTO-REFRESH =====
-function startAutoRefresh() {
-  if (refreshInterval) clearInterval(refreshInterval);
-  
-  refreshInterval = setInterval(() => {
-    if (autoRefreshEnabled) {
-      console.log('⏰ Auto-refresh');
-      loadListings();
-    }
-  }, 20000); // Every 20 seconds
-}
-
-function toggleAutoRefresh() {
-  autoRefreshEnabled = !autoRefreshEnabled;
-  const btn = document.getElementById('autoRefreshBtn');
-  
-  if (autoRefreshEnabled) {
-    btn.textContent = 'Auto: ON';
-    btn.style.borderColor = 'var(--accent)';
-    btn.style.color = 'var(--accent)';
-    document.getElementById('autoStatus').textContent = 'Every 20s';
-  } else {
-    btn.textContent = 'Auto: OFF';
-    btn.style.borderColor = 'var(--text-secondary)';
-    btn.style.color = 'var(--text-secondary)';
-    document.getElementById('autoStatus').textContent = 'Disabled';
-  }
-}
-
-function forceRefresh() {
-  const icon = document.getElementById('refreshIcon');
-  icon.style.animation = 'spin 0.5s linear';
-  
-  loadListings();
-  
-  setTimeout(() => {
-    icon.style.animation = '';
-  }, 500);
-}
-
-function updateTimestamp() {
-  document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
-}
-
-// Refresh when tab becomes visible
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && autoRefreshEnabled) {
-    loadListings();
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  if (window.adminPanel) {
+    window.adminPanel.destroy();
   }
 });
+
+// Add spin animation
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+document.head.appendChild(style);
 </script>
 
 </body>
