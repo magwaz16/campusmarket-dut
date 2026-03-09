@@ -98,11 +98,7 @@ function isItemSaved(itemId){return getSavedItems().some(i=>i.id===itemId)}
 
 function showSaveNotification(message){const n=document.createElement('div');n.innerHTML='<div style="display:flex;align-items:center;gap:8px;"><i data-lucide="heart"></i><span>'+message+'</span></div>';Object.assign(n.style,{position:'fixed',top:'100px',right:'20px',background:'var(--bg-card)',color:'var(--text-primary)',padding:'12px 20px',borderRadius:'12px',border:'1px solid var(--border)',zIndex:'1000',animation:'slideIn 0.3s ease'});document.body.appendChild(n);lucide.createIcons();setTimeout(()=>{n.style.animation='slideOut 0.3s ease';setTimeout(()=>n.remove(),300)},2000)}
 
-function getGalleryHTML(listing)
-{if(!listing.images||listing.images.length===0)
-{return `<div class="listing-emoji-hero">${listing.emoji||'📦'}
-</div>`}
- const thumbs=listing.images.length>1?`<div class="listing-gallery-thumbs">${listing.images.map((url,i)=>`<img src="${url}" class="listing-gallery-thumb ${i===0?'active':''}" alt="Photo ${i+1}" onclick="switchMainImage(this,'${url}')">`).join('')}</div>`:'';return `<div class="listing-gallery"><img src="${listing.images[0]}" class="listing-gallery-main" id="galleryMain" alt="${sanitizeHTML(listing.title)}">${thumbs}</div>`}
+function getGalleryHTML(listing){if(!listing.images||listing.images.length===0){return `<div class="listing-emoji-hero">${listing.emoji||'📦'}</div>`}const thumbs=listing.images.length>1?`<div class="listing-gallery-thumbs">${listing.images.map((url,i)=>`<img src="${url}" class="listing-gallery-thumb ${i===0?'active':''}" alt="Photo ${i+1}" onclick="switchMainImage(this,'${url}')">`).join('')}</div>`:'';return `<div class="listing-gallery"><img src="${listing.images[0]}" class="listing-gallery-main" id="galleryMain" alt="${sanitizeHTML(listing.title)}">${thumbs}</div>`}
 
 function switchMainImage(thumbEl,url){document.getElementById('galleryMain').src=url;document.querySelectorAll('.listing-gallery-thumb').forEach(t=>t.classList.remove('active'));thumbEl.classList.add('active')}
 
