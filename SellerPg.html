@@ -334,7 +334,7 @@
     </div>
     <div class="form-group">
       <label class="required">Title</label>
-      <input type="text" class="form-input" id="title" placeholder="e.g., MacBook Air 2020 or Engineering Math Tutoring" maxlength="60">
+      <input type="text" class="form-input" id="title" placeholder="e.g., MacBook Air 2020 or Engineering Math Tutoring" maxlength="80">
       <div class="form-hint">Be specific - mention brand, model, or key details</div>
     </div>
     <div class="form-group">
@@ -576,7 +576,7 @@ function validateStep(step) {
     if (!document.getElementById('condition').value) { showErrorModal('Select Condition','Please select item condition'); return false; }
     const title = sanitizeInput(document.getElementById('title').value);
     if (!title || title.length < 5)  { showErrorModal('Enter Title','Minimum 5 characters'); return false; }
-    if (title.length > 60)           { showErrorModal('Title Too Long','Maximum 60 characters'); return false; }
+        if (title.length > 80)           { showErrorModal('Title Too Long','Maximum 80 characters'); return false; }
     const desc = sanitizeInput(document.getElementById('description').value);
     if (!desc || desc.length < 10)   { showErrorModal('Enter Description','Minimum 10 characters'); return false; }
     if (currentCategory === 'tutoring' && !document.getElementById('subject').value.trim()) { showErrorModal('Enter Subject','Please enter the tutoring subject'); return false; }
@@ -965,3 +965,4 @@ updateLocationOptions();
 </body>
 
 </html>
+
