@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudentMarket — DUT's Student Marketplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+:root {
+  --primary: #6366f1;
+  --primary-gradient: linear-gradient(135deg, #6366f1, #a855f7);
+  --accent: #06d6a0;
+  --bg-dark: #0f172a;
+  --bg-card: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border: #334155;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== LAYOUT ===== */
+.landing {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 24px;
+  text-align: center;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ===== LOGO ===== */
+.landing-logo {
+  width: 160px;
+  margin-bottom: 32px;
+}
+
+.landing-logo img {
+  width: 100%;
+  display: block;
+}
+
+/* ===== HEADLINE ===== */
+.landing h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+.landing h1 span {
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.landing-sub {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 40px;
+  max-width: 340px;
+}
+
+/* ===== CTA BUTTONS ===== */
+.cta-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 40px;
+}
+
+.cta-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 24px;
+  border-radius: 14px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cta-btn:active {
+  transform: scale(0.97);
+}
+
+.cta-sell {
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+}
+
+.cta-sell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(99, 102, 241, 0.45);
+}
+
+.cta-browse {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1.5px solid var(--border);
+}
+
+.cta-browse:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--text-secondary);
+}
+
+/* ===== TRUST STRIP ===== */
+.trust-strip {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.trust-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.trust-item i {
+  color: var(--accent);
+  width: 16px;
+  height: 16px;
+}
+
+/* ===== FOOTER ===== */
+.landing-footer {
+  text-align: center;
+  padding: 20px 24px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.landing-footer a {
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (min-height: 750px) {
+  .landing {
+    padding: 60px 24px;
+  }
+
+  .landing-logo {
+    width: 180px;
+    margin-bottom: 40px;
+  }
+
+  .landing h1 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-height: 600px) {
+  .landing {
+    padding: 24px;
+    justify-content: flex-start;
+    padding-top: 40px;
+  }
+
+  .landing-logo {
+    width: 120px;
+    margin-bottom: 20px;
+  }
+
+  .landing h1 {
+    font-size: 1.5rem;
+  }
+
+  .landing-sub {
+    margin-bottom: 24px;
+  }
+
+  .cta-group {
+    margin-bottom: 24px;
+  }
+}
+</style>
+</head>
+<body>
+
+<main class="landing">
+  <div class="landing-logo">
+    <img src="Imgs/CM_Logo_1.png" alt="StudentMarket">
+  </div>
+
+  <h1>Buy &amp; sell safely<br>on <span>DUT campus</span></h1>
+  <p class="landing-sub">The marketplace built for DUT students. Verified sellers, campus meetups, zero fees.</p>
+
+  <div class="cta-group">
+    <a href="SellerPg.html" class="cta-btn cta-sell">
+      <i data-lucide="store"></i>
+      Start Selling
+    </a>
+    <a href="home.html" class="cta-btn cta-browse">
+      <i data-lucide="shopping-bag"></i>
+      Browse the Marketplace
+    </a>
+  </div>
+
+  <div class="trust-strip">
+    <div class="trust-item">
+      <i data-lucide="shield-check"></i>
+      Verified sellers
+    </div>
+    <div class="trust-item">
+      <i data-lucide="map-pin"></i>
+      Campus meetups
+    </div>
+    <div class="trust-item">
+      <i data-lucide="badge-check"></i>
+      DUT only
+    </div>
+  </div>
+</main>
+
+<footer class="landing-footer">
+  <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · Built for DUT students
+</footer>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>
