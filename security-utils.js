@@ -23,9 +23,9 @@ function sanitizeInput(value) {
 const VALIDATION_RULES = {
   title: {
     minLength: 5,
-    maxLength: 60,
-    pattern: /^[a-zA-Z0-9\s\-_.,!?()]+$/,
-    errorMessage: 'Title must be 5-60 characters (letters, numbers, basic punctuation only)'
+    maxLength: 80,
+    pattern: /^[a-zA-Z0-9\s\-_.,!?()&\/:%'"]+$/,
+    errorMessage: 'Title must be 5-80 characters'
   },
   description: {
     minLength: 10,
