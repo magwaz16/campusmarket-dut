@@ -847,6 +847,11 @@ setTimeout(() => {
 }, 500);
 
 
+    let description = sanitizeInput(document.getElementById('description').value);
+    if (currentCategory === 'tutoring') {
+      const subject = sanitizeInput(document.getElementById('subject').value);
+      if (subject) description = `Subject: ${subject}\n\n${description}`;
+    }
 
     // ===== NEW: SECURITY VALIDATION =====
     const validation = validateListingData({
